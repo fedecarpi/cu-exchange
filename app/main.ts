@@ -176,7 +176,7 @@ function getCurrencyValues(event) {
           if (jsonObj) {
             var selectedCurrency = getSelectedCurrency();
             var variation = getVariationAsNumber(jsonObj[selectedCurrency]['variation']);
-            tray.setToolTip(selectedCurrency);
+            tray.setToolTip(selectedCurrency + ': ' +  jsonObj[selectedCurrency]['buy']);
             if (variation >= 0) {
               tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + green(jsonObj[selectedCurrency]['buy'] + '↗'));
             } else {
