@@ -1,0 +1,21 @@
+:host {
+  
+}
+
+.title {
+    color: #75b798;
+}
+
+label {
+    color: white;
+}
+
+::ng-deep .btn-primary {
+    --bs-btn-bg: #75b798;
+    --bs-btn-border-color: none;
+    --bs-btn-hover-bg: #479570;
+}
+
+::ng-deep .btn:disabled {
+    background-color: #75b798;
+}

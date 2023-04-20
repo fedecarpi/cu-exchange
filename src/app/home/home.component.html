@@ -1,0 +1,33 @@
+<div class="container" style="padding: 0.2rem;">
+  <div *ngIf="loading" class="row" style="margin-right: 0; margin-top: 3rem;">
+    <div class="col text-center" style="padding-right: 0;">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!loading">
+    <div *ngFor="let c of showCurrencies" class="row" style="margin-right: 0;">
+      <div class="col" style="padding-right: 0;">
+        <div *ngIf="dolData[c].variation >= 0" class="alert alert-success currency-box" role="alert" data-bs-theme="dark">
+          {{c | uppercase}}<span style="float: right;"><i class="bi bi-caret-up-fill"></i>{{ dolData[c].variation }}% </span>
+          <br><i class="bi bi-currency-dollar"></i>{{ dolData[c].sell }}
+        </div>
+        <div *ngIf="dolData[c].variation < 0" class="alert alert-danger currency-box" role="alert" data-bs-theme="dark">
+          {{c | uppercase}}<span style="float: right;"><i class="bi bi-caret-down-fill"></i>{{ dolData[c].variation }}% </span>
+          <br><i class="bi bi-currency-dollar"></i>{{ dolData[c].sell }}
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-right: 0;">
+      <div class="col-8" style="padding-right: 0;">
+        <span class="last-update-font">{{ dolData.ccl.date }}</span>
+      </div>
+      <div class="col-4 text-end" style="padding-right: 0; padding-left: 0;">
+        <i (click)="getCurrencyExchanges()" class="bi-arrow-clockwise icon-white-pointer"></i>
+        <i (click)="showPreferences()" class="bi-gear icon-white-pointer"></i>
+        <i (click)="exit()" class="bi-x icon-white-pointer"></i>
+      </div>
+    </div>
+  </div>
+</div>

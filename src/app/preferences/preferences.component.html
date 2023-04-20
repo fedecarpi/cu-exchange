@@ -1,0 +1,55 @@
+<div class="container">
+  <div *ngIf="loading" class="row" style="margin-right: 0; margin-top: 3rem;">
+    <div class="col text-center" style="padding-right: 0;">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!loading">
+    <div class="row">
+      <div class="col">
+        <h1 class="title">
+          {{ 'PAGES.PREFERENCES.TITLE' | translate }}
+        </h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <label>Default Currency:</label>
+        <select class="form-select" [(ngModel)]="defaultCurrency">
+          <option *ngFor="let cur of currencies" [value]="cur">
+            {{cur}}
+          </option>
+        </select>
+      </div>
+    </div>
+    <hr style="color:#75b798">
+    <div class="row">
+      <div class="col">
+        <label>Currency list (3 max):</label>
+        <div class="row" style="margin-left: 4rem;">
+          <div class="form-check col-5" *ngFor="let c of currencies">
+            <input class="form-check-input" type="checkbox" [checked]="isSelectedCurrency(c)" (change)="selectCurrency(c, $event)">
+            <label class="form-check-label" for="flexCheckDefault">
+              {{c}}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row text-center">
+      <div class="col">
+        <button type="button" (click)="save()" class="btn btn-primary" style="width: 100%;">
+          Save
+        </button>
+      </div>
+      <div class="col">
+        <button type="button" (click)="cancel()" class="btn btn-primary" style="width: 100%;">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+  
+</div>
