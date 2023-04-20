@@ -69,6 +69,7 @@ function createTrayApp() {
         showDockIcon: false,
         preloadWindow: true,
         browserWindow: {
+          x: (currentPlatform == platforms.LINUX)?screen.getCursorScreenPoint().x - 20:undefined,
           width: 185,
           height: 160,
           minHeight: 160,
