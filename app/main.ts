@@ -4,6 +4,29 @@ import * as fs from 'fs';
 import { menubar } from 'menubar';
 import * as path from 'path';
 import { log } from 'electron-log';
+const os = require('os');
+
+const platforms = {
+  WINDOWS: 'WINDOWS',
+  MAC: 'MAC',
+  LINUX: 'LINUX',
+  SUN: 'SUN',
+  OPENBSD: 'OPENBSD',
+  ANDROID: 'ANDROID',
+  AIX: 'AIX',
+};
+
+const platformsNames = {
+  win32: platforms.WINDOWS,
+  darwin: platforms.MAC,
+  linux: platforms.LINUX,
+  sunos: platforms.SUN,
+  openbsd: platforms.OPENBSD,
+  android: platforms.ANDROID,
+  aix: platforms.AIX,
+};
+
+const currentPlatform = platformsNames[os.platform()];
 
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
@@ -78,7 +101,9 @@ try {
     app.on('ready', () => {
       setTimeout(()=> {
         createTrayApp();
-        app.dock.hide();
+        if (currentPlatform == platforms.MAC) {
+          app.dock.hide();
+        }
       }, 400);
     });
 
@@ -95,7 +120,9 @@ try {
       // On OS X it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       createTrayApp();
-      app.dock.hide();
+      if (currentPlatform == platforms.MAC) {
+        app.dock.hide();
+      }
     });
   }
 } catch (e) {
