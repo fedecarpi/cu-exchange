@@ -168,7 +168,7 @@ function getCurrencyValues(event) {
       const data = [];
       response.on("data", (chunk) => {
         data.push(chunk);
-      })
+      });
       response.on("end", () => {
         const json = Buffer.concat(data).toString();
         if (json) {
@@ -191,7 +191,13 @@ function getCurrencyValues(event) {
             }
           }
         }
-      })
+      });
+      response.on("error", () => {
+        log("Network Error Processing Response ...");
+      });
+    });
+    req.on("error", (error: Error) => {
+      log("Request Network Error: ", error);
     });
     req.end();
   } catch (err) {
@@ -213,8 +219,8 @@ function createPreferenceWindow() {
   preferenceWin = new BrowserWindow({
     x: 0,
     y: 0,
-    width: size.width / 4 - 50,
-    height: size.height / 3 + 70,
+    width: Math.round((size.width / 4) - 50),
+    height: Math.round((size.height / 3) + 70),
     alwaysOnTop: true,
     title: 'Preferences',
     resizable: (serve)?true:false,
