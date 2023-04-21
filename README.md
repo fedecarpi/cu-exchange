@@ -1,3 +1,20 @@
+# About
+
+Currency Exchange Tray info app, powered by Angular 15 with Electron 22 (Typescript + SASS + Hot Reload).
+
+
+## Screenshots
+
+Main tray window
+
+![alt](./doc/main.png)
+
+Preferences
+
+![alt](./doc/preferences.png)
+
+- Note: Dynamic currency data gathered from [dolarito](https://www.dolarito.ar/)
+
 ## Getting Started
 
 *Clone this repository locally:*
