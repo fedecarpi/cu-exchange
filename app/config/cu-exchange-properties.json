@@ -1,18 +1,5 @@
 {
   "fetchUrl": "https://www.dolarito.ar/api/frontend/quotations?currency=dolar",
-  "currencies": [
-    "oficial",
-    "ahorro",
-    "tarjeta",
-    "qatar",
-    "netflix",
-    "informal",
-    "mayorista",
-    "ccl",
-    "mep",
-    "cripto",
-    "tiendadolar"
-  ],
   "defaultCurrency": "ccl",
   "showCurrencies": [
     "ccl",

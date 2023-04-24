@@ -36,6 +36,7 @@ let tray = null
 let preferenceWin: BrowserWindow = null;
 let preferencesFilePath = null;
 let fetchUrl = null;
+let currencies = [];
 
 function createTrayApp() {
   //Preventing running more than one tray instance
@@ -47,7 +48,7 @@ function createTrayApp() {
         require('electron-reloader')(module);
         //win.loadURL('http://localhost:4200');
         indexURL = 'http://localhost:4200';
-        preferencesFilePath = path.resolve(__dirname, 'config/cu-exchange-properties.json');
+        //preferencesFilePath = path.resolve(__dirname, 'config/cu-exchange-properties.json');
       } else {
         // Path when running electron executable
         let pathIndex = './index.html';
@@ -58,7 +59,7 @@ function createTrayApp() {
         const url = new URL(path.join('file:', __dirname, pathIndex));
         //win.loadURL(url.href);
         indexURL = url.href;
-        preferencesFilePath = path.resolve(__dirname, '../app/config/cu-exchange-properties.json');
+        //preferencesFilePath = path.resolve(__dirname, '../app/config/cu-exchange-properties.json');
       }
 
       tray = new Tray(path.resolve(__dirname, 'icons/MenuIconTemplate.png'))
@@ -89,6 +90,12 @@ function createTrayApp() {
 
 try {
 
+  if (serve) {
+    preferencesFilePath = path.resolve(__dirname, 'config/cu-exchange-properties.json');
+  } else {
+    preferencesFilePath = path.resolve(__dirname, '../app/config/cu-exchange-properties.json');
+  }
+
   const gotTheLock = app.requestSingleInstanceLock();
   if (!gotTheLock) {
     log('Instance app does not get the lock ... closing it!');
@@ -101,7 +108,8 @@ try {
     // Added 400 ms to fix the black background issue while using transparent window. More detais at https://github.com/electron/electron/issues/15947
     app.on('ready', () => {
       setTimeout(()=> {
-        createTrayApp();
+        //createTrayApp();
+        initVariables(createTrayApp);
         if (currentPlatform == platforms.MAC) {
           app.dock.hide();
         }
@@ -120,7 +128,8 @@ try {
     app.on('activate', () => {
       // On OS X it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      createTrayApp();
+      //createTrayApp();
+      initVariables(createTrayApp);
       if (currentPlatform == platforms.MAC) {
         app.dock.hide();
       }
@@ -139,9 +148,46 @@ function getVariationAsNumber(strVariation) {
   }
 }
 
+function getCurrenciesInResponse(dolaritoResponse) {
+  return Object.keys(dolaritoResponse);
+}
+
+function initVariables(startAppFn) {
+  try {
+    const req = net.request(getFetchURL());
+    req.on("response", (response) => {
+      const data = [];
+      response.on("data", (chunk) => {
+        data.push(chunk);
+      });
+      response.on("end", () => {
+        const json = Buffer.concat(data).toString();
+        if (json) {
+          const jsonObj = JSON.parse(json);
+          if (jsonObj) {
+            currencies = getCurrenciesInResponse(jsonObj);
+          }
+        }
+        startAppFn();
+      });
+      response.on("error", () => {
+        log("Network Error Processing Response, app won't start...");
+      });
+    });
+    req.on("error", (error: Error) => {
+      log("Request Network Error, app won't start: ", error);
+    });
+    req.end();
+  } catch (err) {
+    log(err);
+  }
+}
+
 function getJsonProperties() {
   let rawdata = fs.readFileSync(preferencesFilePath, 'utf8');
-  return JSON.parse(rawdata);
+  let jsonPref = JSON.parse(rawdata);
+  jsonPref['currencies'] = currencies;
+  return jsonPref;
 }
 
 function getSelectedCurrency() {
@@ -281,6 +327,9 @@ ipcMain.on('save-preferences', (event, newPreferences) => {
   if (newPreferences) {
     jsonProperties.defaultCurrency = newPreferences.defaultCurrency;
     jsonProperties.showCurrencies = newPreferences.showCurrencies;
+    //Currencies are dynamically calculated from the call to the endpoint
+    //hence, persistence is not required
+    delete jsonProperties['currencies']; 
     try {
       fs.writeFileSync(preferencesFilePath, JSON.stringify(jsonProperties, null, 2), 'utf8');
     } catch (err) {
