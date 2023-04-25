@@ -13,7 +13,16 @@ Preferences
 
 ![alt](./doc/preferences.png)
 
-- Note: Dynamic currency data gathered from [dolarito](https://www.dolarito.ar/)
+ > __Note__
+Dynamic currency data gathered from [dolarito](https://www.dolarito.ar/)
+
+> __Warning__
+Known issues on Linux env:
+  - Tray window opens in wrong position.
+  - Tray component does not support text information (just tray icon).
+  - Preferences are not being saved.   
+
+> __Warning__ Not tested on Win env yet!
 
 ## Getting Started
 
