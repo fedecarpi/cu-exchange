@@ -1,5 +1,5 @@
 {
-  "fetchUrl": "https://www.dolarito.ar/api/frontend/quotations?currency=dolar",
+  "fetchUrl": "https://www.dolarito.ar/api/frontend/quotations/dolar",
   "defaultCurrency": "ccl",
   "showCurrencies": [
     "ccl",
