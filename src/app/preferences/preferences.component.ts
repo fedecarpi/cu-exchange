@@ -18,9 +18,17 @@ export class PreferencesComponent implements OnInit {
     private electronService: ElectronService,
     private cRef: ChangeDetectorRef) { }
 
+  getCurrencies(qs) {
+    let resp = [];
+    qs.forEach(element => {
+      resp.push(element.name);
+    });
+    return resp;
+  } 
+
   processProperties(propertiesData) {
     this.defaultCurrency = propertiesData['defaultCurrency'];
-    this.currencies = propertiesData['currencies'];
+    this.currencies = this.getCurrencies(propertiesData['quotations']);
     this.showCurrencies = propertiesData['showCurrencies'];
   }
 

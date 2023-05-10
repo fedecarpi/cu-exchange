@@ -1,10 +1,11 @@
 import { green, red } from 'ansicolor';
-import { Tray, app, ipcMain, net, BrowserWindow, screen } from 'electron';
+import { Tray, app, ipcMain, BrowserWindow, screen } from 'electron';
 import * as fs from 'fs';
 import { menubar } from 'menubar';
 import * as path from 'path';
 import { log } from 'electron-log';
 const os = require('os');
+import axios from 'axios';
 
 const platforms = {
   WINDOWS: 'WINDOWS',
@@ -35,7 +36,7 @@ let mb = null;
 let tray = null
 let preferenceWin: BrowserWindow = null;
 let preferencesFilePath = null;
-let fetchUrl = null;
+let quotations = [];
 let currencies = [];
 
 function createTrayApp() {
@@ -97,6 +98,7 @@ try {
   }
 
   const gotTheLock = app.requestSingleInstanceLock();
+  currencies = getQuotationsNames();
   if (!gotTheLock) {
     log('Instance app does not get the lock ... closing it!');
     app.quit()
@@ -108,8 +110,8 @@ try {
     // Added 400 ms to fix the black background issue while using transparent window. More detais at https://github.com/electron/electron/issues/15947
     app.on('ready', () => {
       setTimeout(()=> {
-        //createTrayApp();
-        initVariables(createTrayApp);
+        createTrayApp();
+        //initVariables(createTrayApp);
         if (currentPlatform == platforms.MAC) {
           app.dock.hide();
         }
@@ -128,8 +130,8 @@ try {
     app.on('activate', () => {
       // On OS X it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      //createTrayApp();
-      initVariables(createTrayApp);
+      createTrayApp();
+      //initVariables(createTrayApp);
       if (currentPlatform == platforms.MAC) {
         app.dock.hide();
       }
@@ -137,56 +139,13 @@ try {
   }
 } catch (e) {
   // Catch Error
-  // throw e;
-}
-
-function getVariationAsNumber(strVariation) {
-  if (strVariation) {
-    return Number(strVariation.replace(',','.'));
-  } else {
-    return 0;
-  }
-}
-
-function getCurrenciesInResponse(dolaritoResponse) {
-  return Object.keys(dolaritoResponse);
-}
-
-function initVariables(startAppFn) {
-  try {
-    const req = net.request(getFetchURL());
-    req.on("response", (response) => {
-      const data = [];
-      response.on("data", (chunk) => {
-        data.push(chunk);
-      });
-      response.on("end", () => {
-        const json = Buffer.concat(data).toString();
-        if (json) {
-          const jsonObj = JSON.parse(json);
-          if (jsonObj) {
-            currencies = getCurrenciesInResponse(jsonObj);
-          }
-        }
-        startAppFn();
-      });
-      response.on("error", () => {
-        log("Network Error Processing Response, app won't start...");
-      });
-    });
-    req.on("error", (error: Error) => {
-      log("Request Network Error, app won't start: ", error);
-    });
-    req.end();
-  } catch (err) {
-    log(err);
-  }
+  log(e);
 }
 
 function getJsonProperties() {
   let rawdata = fs.readFileSync(preferencesFilePath, 'utf8');
   let jsonPref = JSON.parse(rawdata);
-  jsonPref['currencies'] = currencies;
+  //jsonPref['currencies'] = currencies;
   return jsonPref;
 }
 
@@ -199,57 +158,76 @@ function getSelectedCurrency() {
   }
 }
 
-function getFetchURL() {
-  if (!fetchUrl) {
+function getQuotations() {
+  if (!quotations || quotations.length == 0) {
     let json = getJsonProperties();
-    fetchUrl = json.fetchUrl;
+    quotations = json.quotations;
   }
-  return fetchUrl;
+  return quotations;
+}
+
+function getQuotationsNames() {
+  if (!quotations || quotations.length == 0) {
+    let json = getJsonProperties();
+    quotations = json.quotations;
+  }
+  let names = [];
+  quotations.forEach(q => {
+    names.push(q.name);
+  });
+  return names;
+}
+
+function calculateQName(axiosResp) {
+  const qs = getQuotations();
+  for (let index = 0; index < qs.length; index++) {
+    const element = qs[index];
+    if (element['fetchURL'] == axiosResp['config']['url'] ) {
+      return element['name'];
+    }
+  }
+}
+
+function getDataFromRequests(axiosData) { 
+  let resp = {};
+  axiosData.forEach(axiosResp => {
+    const qName = calculateQName(axiosResp);
+    resp[qName] = axiosResp['data'];
+  });
+  return resp;
 }
 
 function getCurrencyValues(event) {
   try {
-    const req = net.request(getFetchURL());
-    req.on("response", (response) => {
-      const data = [];
-      response.on("data", (chunk) => {
-        data.push(chunk);
-      });
-      response.on("end", () => {
-        const json = Buffer.concat(data).toString();
-        if (json) {
-          const jsonObj = JSON.parse(json);
-          if (jsonObj) {
-            var selectedCurrency = getSelectedCurrency();
-            var variation = getVariationAsNumber(jsonObj[selectedCurrency]['variation']);
-            tray.setToolTip(selectedCurrency + ': ' +  jsonObj[selectedCurrency]['buy']);
-            if (variation >= 0) {
-              tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + green(jsonObj[selectedCurrency]['buy'] + '↗'));
-            } else {
-              tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + red(jsonObj[selectedCurrency]['buy'] + '↘'));
-            }
-            if (event) {
-              event.sender.send('update-currency-values-ui', jsonObj);
-            } else {
-              let props = getJsonProperties();
-              mb.window.send('load-json-properties', props);
-              mb.window.send('update-currency-values-ui', jsonObj);
-            }
+    const quotations = getQuotations();
+    const requests = [];
+    quotations.forEach(q => {
+      requests.push(axios.get(q.fetchURL));
+    });
+    Promise.all(requests).then(function(values) {
+      if (values) {
+        const jsonObj = getDataFromRequests(values);
+        if (jsonObj) {
+          var selectedCurrency = getSelectedCurrency();
+          tray.setToolTip(selectedCurrency + ': ' +  jsonObj[selectedCurrency]['compra']);
+          if (jsonObj[selectedCurrency]['class-variacion'] == 'up' || jsonObj[selectedCurrency]['class-variacion'] == 'equal') {
+            tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + green(jsonObj[selectedCurrency]['compra'] + '↗'));
+          } else {
+            tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + red(jsonObj[selectedCurrency]['compra'] + '↘'));
+          }
+          if (event) {
+            event.sender.send('update-currency-values-ui', jsonObj);
+          } else {
+            let props = getJsonProperties();
+            mb.window.send('load-json-properties', props);
+            mb.window.send('update-currency-values-ui', jsonObj);
           }
         }
-      });
-      response.on("error", () => {
-        log("Network Error Processing Response ...");
-      });
+      }
     });
-    req.on("error", (error: Error) => {
-      log("Request Network Error: ", error);
-    });
-    req.end();
   } catch (err) {
     log(err);
   }
-
 }
 
 ipcMain.on('get-currency-values', (event, data) => {
@@ -327,9 +305,6 @@ ipcMain.on('save-preferences', (event, newPreferences) => {
   if (newPreferences) {
     jsonProperties.defaultCurrency = newPreferences.defaultCurrency;
     jsonProperties.showCurrencies = newPreferences.showCurrencies;
-    //Currencies are dynamically calculated from the call to the endpoint
-    //hence, persistence is not required
-    delete jsonProperties['currencies']; 
     try {
       fs.writeFileSync(preferencesFilePath, JSON.stringify(jsonProperties, null, 2), 'utf8');
     } catch (err) {

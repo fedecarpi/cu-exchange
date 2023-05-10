@@ -10,6 +10,7 @@
   "private": true,
   "dependencies": {
     "ansicolor": "1.1.100",
+    "axios": "^1.4.0",
     "electron-log": "^4.4.8",
     "menubar": "9.3.0",
     "properties-file": "^2.2.4"

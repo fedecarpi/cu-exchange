@@ -46,13 +46,8 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  parseVariationsToNumbers(currencies) {
-    for (const [key, value] of Object.entries(currencies)) {
-      let strValue = value['variation'];
-      if (strValue) {
-        value['variation'] = Number(strValue.replace(',','.'));
-      }
-    }
+  parseVariationToNumber(currencieData) {
+    currencieData['variacion'] = Number(currencieData['variacion'].replace(',','.').replace('%', ''));
  }
 
  processProperties(propertiesData) {
@@ -64,7 +59,7 @@ export class HomeComponent implements OnInit {
   setEventListener() {
     if (this.electronService.isElectron) {
       this.electronService.ipcRenderer.on('update-currency-values-ui', (event, data) => {
-        this.parseVariationsToNumbers(data);
+        //this.parseVariationToNumber(data);
         setTimeout (() => {
           this.loading = false;
           this.dolData = data;

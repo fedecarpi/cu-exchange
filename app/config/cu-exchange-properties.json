@@ -1,9 +1,50 @@
 {
-  "fetchUrl": "https://www.dolarito.ar/api/frontend/quotations/dolar",
+  "quotations": [
+    {
+      "name": "oficial",
+      "fetchURL": "https://mercados.ambito.com/dolar/oficial/variacion"
+    },
+    {
+      "name": "ahorro",
+      "fetchURL": "https://mercados.ambito.com/dolarahorro/variacion"
+    },
+    {
+      "name": "tarjeta",
+      "fetchURL": "https://mercados.ambito.com/dolarturista/variacion"
+    },
+    {
+      "name": "qatar",
+      "fetchURL": "https://mercados.ambito.com/dolarqatar/variacion"
+    },
+    {
+      "name": "informal",
+      "fetchURL": "https://mercados.ambito.com/dolar/informal/variacion"
+    },
+    {
+      "name": "mayorista",
+      "fetchURL": "https://mercados.ambito.com/dolar/mayorista/variacion"
+    },
+    {
+      "name": "ccl",
+      "fetchURL": "https://mercados.ambito.com/dolarrava/cl/variacion"
+    },
+    {
+      "name": "mep",
+      "fetchURL": "https://mercados.ambito.com/dolarrava/mep/variacion"
+    },
+    {
+      "name": "futuro",
+      "fetchURL": "https://mercados.ambito.com/dolarfuturo/variacion"
+    },
+    {
+      "name": "nacion",
+      "fetchURL": "https://mercados.ambito.com/dolarnacion/variacion"
+    }
+  ],
   "defaultCurrency": "ccl",
   "showCurrencies": [
     "ccl",
     "informal",
-    "oficial"
+    "nacion"
   ]
 }
