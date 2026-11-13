@@ -1,0 +1,84 @@
+:root {
+  color-scheme: dark;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --bg: #0e131b;
+  --bg-translucent: rgba(14, 19, 27, 0.72);
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text: #e8edf5;
+  --text-muted: #8b95a7;
+  --text-subtle: #5e687a;
+
+  --accent: #2dd4bf;
+  --accent-contrast: #04211d;
+  --accent-soft: rgba(45, 212, 191, 0.14);
+
+  --up: #22c55e;
+  --up-soft: rgba(34, 197, 94, 0.14);
+  --down: #f43f5e;
+  --down-soft: rgba(244, 63, 94, 0.14);
+  --neutral: #94a3b8;
+  --neutral-soft: rgba(148, 163, 184, 0.14);
+
+  --skeleton: rgba(255, 255, 255, 0.06);
+  --skeleton-shine: rgba(255, 255, 255, 0.12);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration: 220ms;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg: #f5f7fb;
+    --bg-translucent: rgba(245, 247, 251, 0.78);
+    --surface: rgba(15, 23, 42, 0.035);
+    --surface-hover: rgba(15, 23, 42, 0.065);
+    --surface-strong: rgba(15, 23, 42, 0.09);
+    --border: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.16);
+
+    --text: #0f172a;
+    --text-muted: #5b6577;
+    --text-subtle: #94a0b4;
+
+    --accent: #0d9488;
+    --accent-contrast: #ffffff;
+    --accent-soft: rgba(13, 148, 136, 0.12);
+
+    --up: #16a34a;
+    --up-soft: rgba(22, 163, 74, 0.12);
+    --down: #e11d48;
+    --down-soft: rgba(225, 29, 72, 0.1);
+    --neutral: #64748b;
+    --neutral-soft: rgba(100, 116, 139, 0.12);
+
+    --skeleton: rgba(15, 23, 42, 0.06);
+    --skeleton-shine: rgba(15, 23, 42, 0.1);
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+  }
+}

@@ -1,0 +1,94 @@
+<div class="window" [class.mac]="isMac">
+  <header class="titlebar">
+    <span class="title">{{ 'HISTORY.TITLE' | translate }}</span>
+    <nav class="chips" role="tablist">
+      <button *ngFor="let name of currencies"
+              type="button"
+              role="tab"
+              class="chip"
+              [class.active]="name === currency"
+              [attr.aria-selected]="name === currency"
+              (click)="selectCurrency(name)">
+        {{ name }}
+      </button>
+    </nav>
+  </header>
+
+  <section class="summary">
+    <div class="headline">
+      <span class="label">{{ currency }} · {{ 'HISTORY.CURRENT' | translate }}</span>
+      <div class="value-row">
+        <span class="value tabular">
+          <span class="currency">$</span><span [appAnimatedNumber]="quote?.value ?? stats?.last ?? null"></span>
+        </span>
+        <span *ngIf="quote" class="pill tabular" [class.up]="quote.trend === 'up'" [class.down]="quote.trend === 'down'">
+          <i class="bi" [ngClass]="quote.trend === 'up' ? 'bi-caret-up-fill' : quote.trend === 'down' ? 'bi-caret-down-fill' : 'bi-dash'"></i>
+          {{ quote.variation | number:'1.2-2' }}%
+        </span>
+      </div>
+    </div>
+
+    <div class="segmented" role="tablist">
+      <span class="segmented-indicator" [style.transform]="'translateX(' + rangeIndex * 100 + '%)'"
+            [style.width]="100 / ranges.length + '%'"></span>
+      <button *ngFor="let r of ranges"
+              type="button"
+              role="tab"
+              class="segment"
+              [class.active]="r.id === range"
+              [attr.aria-selected]="r.id === range"
+              (click)="selectRange(r.id)">
+        {{ r.id }}
+      </button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <span class="stat-label">{{ 'HISTORY.PERIOD_CHANGE' | translate }}</span>
+      <span class="stat-value tabular" [class.up]="trend === 'up'" [class.down]="trend === 'down'">
+        <ng-container *ngIf="stats; else dash">
+          {{ stats.change > 0 ? '+' : '' }}{{ stats.change | number:'1.2-2' }}
+          <small>({{ stats.changePct > 0 ? '+' : '' }}{{ stats.changePct | number:'1.2-2' }}%)</small>
+        </ng-container>
+      </span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">{{ 'HISTORY.HIGH' | translate }}</span>
+      <span class="stat-value tabular" [appAnimatedNumber]="stats?.high ?? null"></span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">{{ 'HISTORY.LOW' | translate }}</span>
+      <span class="stat-value tabular" [appAnimatedNumber]="stats?.low ?? null"></span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">{{ 'HISTORY.AVERAGE' | translate }}</span>
+      <span class="stat-value tabular" [appAnimatedNumber]="stats?.average ?? null"></span>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div #chartContainer class="chart" [class.dimmed]="loading" [class.hidden]="!loading && points.length === 0"></div>
+
+    <div *ngIf="tooltip" class="tooltip tabular" [class.flip]="tooltip.flip"
+         [style.left.px]="tooltip.x"
+         [style.top.px]="tooltip.y">
+      <span class="tooltip-date">{{ tooltip.date }}</span>
+      <span class="tooltip-value">$ {{ formatPrice(tooltip.value) }}</span>
+    </div>
+
+    <div *ngIf="loading && points.length === 0" class="overlay" @fade>
+      <div class="skeleton chart-skeleton"></div>
+    </div>
+
+    <div *ngIf="!loading && points.length === 0" class="overlay empty" @fade>
+      <div class="empty-icon"><i class="bi bi-graph-down"></i></div>
+      <p>{{ 'HISTORY.NO_DATA' | translate }}</p>
+      <button type="button" class="btn-ui" (click)="retry()">
+        <i class="bi bi-arrow-clockwise"></i>{{ 'HISTORY.RETRY' | translate }}
+      </button>
+    </div>
+  </section>
+</div>
+
+<ng-template #dash>—</ng-template>

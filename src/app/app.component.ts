@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { ElectronService } from './core/services';
 import { TranslateService } from '@ngx-translate/core';
-import { APP_CONFIG } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -13,16 +12,22 @@ export class AppComponent {
     private electronService: ElectronService,
     private translate: TranslateService
   ) {
+    this.translate.addLangs(['en', 'es']);
     this.translate.setDefaultLang('en');
-    console.log('APP_CONFIG', APP_CONFIG);
+    const browserLang = this.translate.getBrowserLang();
+    this.translate.use(browserLang === 'es' ? 'es' : 'en');
 
-    if (electronService.isElectron) {
-      console.log(process.env);
-      console.log('Run in electron');
-      console.log('Electron ipcRenderer', this.electronService.ipcRenderer);
-      console.log('NodeJS childProcess', this.electronService.childProcess);
-    } else {
-      console.log('Run in browser');
+    if (electronService.isElectron && window.process.platform === 'darwin') {
+      document.documentElement.classList.add('platform-mac');
     }
+
+    // Electron may focus elements programmatically when a window opens; only show focus rings after keyboard use.
+    const root = document.documentElement;
+    window.addEventListener('keydown', event => {
+      if (event.key === 'Tab') {
+        root.classList.add('keyboard-nav');
+      }
+    }, true);
+    window.addEventListener('mousedown', () => root.classList.remove('keyboard-nav'), true);
   }
 }

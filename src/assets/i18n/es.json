@@ -1,0 +1,39 @@
+{
+  "HOME": {
+    "UPDATED": "Actualizado {{time}}",
+    "UPDATING": "Actualizando…",
+    "REFRESH": "Actualizar",
+    "PREFERENCES": "Preferencias",
+    "QUIT": "Salir",
+    "ERROR_TITLE": "No se pudieron cargar las cotizaciones",
+    "ERROR_STALE": "Falló la actualización",
+    "RETRY": "Reintentar",
+    "EMPTY": "No hay monedas seleccionadas",
+    "BUY": "Compra",
+    "SELL": "Venta",
+    "OPEN_HISTORY": "Ver histórico"
+  },
+  "HISTORY": {
+    "TITLE": "Histórico",
+    "CURRENT": "Valor actual",
+    "PERIOD_CHANGE": "Variación del período",
+    "HIGH": "Máximo",
+    "LOW": "Mínimo",
+    "AVERAGE": "Promedio",
+    "NO_DATA": "No hay datos históricos disponibles para esta moneda",
+    "ERROR": "No se pudo cargar el histórico",
+    "RETRY": "Reintentar"
+  },
+  "PREFERENCES": {
+    "TITLE": "Preferencias",
+    "SUBTITLE": "Elegí qué ver en la barra de menú y en el popup.",
+    "TRAY_CURRENCY": "Moneda de la barra de menú",
+    "TRAY_CURRENCY_HINT": "Se muestra junto al ícono de la bandeja.",
+    "SHOWN": "Monedas del popup",
+    "SHOWN_HINT": "Elegí hasta {{max}}.",
+    "MAX_REACHED": "Podés elegir hasta {{max}} monedas",
+    "SAVE": "Guardar",
+    "CANCEL": "Cancelar",
+    "SAVED": "Guardado"
+  }
+}

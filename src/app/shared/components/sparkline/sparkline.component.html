@@ -1,0 +1,18 @@
+<svg *ngIf="linePath"
+     class="sparkline"
+     [class.up]="trend === 'up'"
+     [class.down]="trend === 'down'"
+     [attr.width]="width"
+     [attr.height]="height"
+     [attr.viewBox]="'0 0 ' + width + ' ' + height"
+     aria-hidden="true">
+  <defs>
+    <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="0.28"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+  <path class="area" [attr.d]="areaPath" [attr.fill]="'url(#' + gradientId + ')'"></path>
+  <path class="line" [attr.d]="linePath" pathLength="1"></path>
+  <circle *ngIf="lastPoint" class="dot" [attr.cx]="lastPoint.x" [attr.cy]="lastPoint.y" r="2"></circle>
+</svg>

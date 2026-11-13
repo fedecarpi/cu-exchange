@@ -46,10 +46,10 @@ test.describe('Check Home Page', async () => {
   //   expect(screenshot).toMatchSnapshot(`home-${browserName}.png`);
   // });
 
-  test('Check title', async () => {
-    const elem = await firstWindow.$('app-home h1');
-    const text = await elem.innerText();
-    expect(text).toBe('App works !');
+  test('Render currency cards', async () => {
+    await firstWindow.waitForSelector('app-currency-card', { timeout: 30000 });
+    const cards = await firstWindow.$$('app-currency-card');
+    expect(cards.length).toBeGreaterThan(0);
   });
 
   test.afterAll( async () => {

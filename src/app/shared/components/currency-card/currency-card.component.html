@@ -1,0 +1,30 @@
+<div class="card"
+     role="button"
+     tabindex="0"
+     [@flash]="flashState"
+     [attr.title]="'HOME.OPEN_HISTORY' | translate"
+     (click)="open()"
+     (keydown.enter)="open()"
+     (keydown.space)="$event.preventDefault(); open()">
+  <div class="card-header">
+    <span class="name">{{ quote.name }}</span>
+    <span class="pill tabular" [class.up]="quote.trend === 'up'" [class.down]="quote.trend === 'down'">
+      <i class="bi" [ngClass]="trendIcon"></i>{{ quote.variation | number:'1.2-2' }}%
+    </span>
+  </div>
+  <div class="card-body">
+    <div class="price tabular">
+      <span class="currency">$</span><span [appAnimatedNumber]="quote.value"></span>
+    </div>
+    <div class="chart">
+      <div *ngIf="history === null" class="skeleton chart-skeleton"></div>
+      <app-sparkline *ngIf="history && history.length > 1" [points]="history"></app-sparkline>
+      <i *ngIf="history && history.length > 1" class="bi bi-chevron-right open-hint"></i>
+    </div>
+  </div>
+  <div *ngIf="quote.hasSpread" class="spread tabular">
+    <span>{{ 'HOME.BUY' | translate }} <strong>{{ quote.buy | number:'1.2-2' }}</strong></span>
+    <span class="dot-sep"></span>
+    <span>{{ 'HOME.SELL' | translate }} <strong>{{ quote.sell | number:'1.2-2' }}</strong></span>
+  </div>
+</div>

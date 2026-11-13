@@ -1,55 +1,67 @@
-<div class="container">
-  <div *ngIf="loading" class="row" style="margin-right: 0; margin-top: 3rem;">
-    <div class="col text-center" style="padding-right: 0;">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
+<div class="window" [class.mac]="isMac">
+  <header class="titlebar">
+    <h1>{{ 'PREFERENCES.TITLE' | translate }}</h1>
+    <p>{{ 'PREFERENCES.SUBTITLE' | translate }}</p>
+  </header>
+
+  <ng-container *ngIf="loading">
+    <div class="section">
+      <div class="skeleton" style="width: 140px; height: 12px;"></div>
+      <div class="skeleton" style="width: 100%; height: 36px; margin-top: 10px;"></div>
     </div>
-  </div>
-  <div *ngIf="!loading">
-    <div class="row">
-      <div class="col">
-        <h1 class="title">
-          {{ 'PAGES.PREFERENCES.TITLE' | translate }}
-        </h1>
-      </div>
+    <div class="section">
+      <div class="skeleton" style="width: 120px; height: 12px;"></div>
+      <div class="skeleton" style="width: 100%; height: 110px; margin-top: 10px;"></div>
     </div>
-    <div class="row">
-      <div class="col-12">
-        <label>Default Currency:</label>
-        <select class="form-select" [(ngModel)]="defaultCurrency">
-          <option *ngFor="let cur of currencies" [value]="cur">
-            {{cur}}
-          </option>
+  </ng-container>
+
+  <form *ngIf="!loading" class="content" (ngSubmit)="save()">
+    <section class="section">
+      <label class="section-label" for="tray-currency">{{ 'PREFERENCES.TRAY_CURRENCY' | translate }}</label>
+      <span class="section-hint">{{ 'PREFERENCES.TRAY_CURRENCY_HINT' | translate }}</span>
+      <div class="select-wrap">
+        <select id="tray-currency" name="defaultCurrency" class="select" [(ngModel)]="defaultCurrency">
+          <option *ngFor="let cur of currencies" [value]="cur">{{ cur }}</option>
         </select>
+        <i class="bi bi-chevron-down"></i>
       </div>
-    </div>
-    <hr style="color:#75b798">
-    <div class="row">
-      <div class="col">
-        <label>Currency list (3 max):</label>
-        <div class="row" style="margin-left: 4rem;">
-          <div class="form-check col-5" *ngFor="let c of currencies">
-            <input class="form-check-input" type="checkbox" [checked]="isSelectedCurrency(c)" (change)="selectCurrency(c, $event)">
-            <label class="form-check-label" for="flexCheckDefault">
-              {{c}}
-            </label>
-          </div>
-        </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-label" id="shown-label">{{ 'PREFERENCES.SHOWN' | translate }}</span>
+        <span class="counter tabular" [class.full]="showCurrencies.length >= max" [@shake]="shakeCount">
+          {{ showCurrencies.length }}/{{ max }}
+        </span>
       </div>
-    </div>
-    <div class="row text-center">
-      <div class="col">
-        <button type="button" (click)="save()" class="btn btn-primary" style="width: 100%;">
-          Save
-        </button>
+      <span class="section-hint">{{ 'PREFERENCES.SHOWN_HINT' | translate: { max: max } }}</span>
+
+      <div class="chips" role="group" aria-labelledby="shown-label">
+        <ng-container *ngFor="let c of currencies">
+          <input type="checkbox"
+                 class="chip-input"
+                 [id]="'currency-' + c"
+                 [name]="'currency-' + c"
+                 [checked]="isSelectedCurrency(c)"
+                 (change)="toggleCurrency(c); $any($event.target).checked = isSelectedCurrency(c)">
+          <label class="chip" [for]="'currency-' + c">
+            <i class="bi" [ngClass]="isSelectedCurrency(c) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            {{ c }}
+          </label>
+        </ng-container>
       </div>
-      <div class="col">
-        <button type="button" (click)="cancel()" class="btn btn-primary" style="width: 100%;">
-          Cancel
-        </button>
+
+      <div *ngIf="maxReachedVisible" class="notice" role="status" @fade>
+        <i class="bi bi-info-circle"></i>{{ 'PREFERENCES.MAX_REACHED' | translate: { max: max } }}
       </div>
-    </div>
-  </div>
-  
+    </section>
+
+    <footer class="actions">
+      <button type="button" class="btn-ui" (click)="cancel()">{{ 'PREFERENCES.CANCEL' | translate }}</button>
+      <button type="submit" class="btn-ui primary" [class.saved]="saved" [disabled]="saved">
+        <ng-container *ngIf="!saved">{{ 'PREFERENCES.SAVE' | translate }}</ng-container>
+        <ng-container *ngIf="saved"><i class="bi bi-check-lg"></i>{{ 'PREFERENCES.SAVED' | translate }}</ng-container>
+      </button>
+    </footer>
+  </form>
 </div>

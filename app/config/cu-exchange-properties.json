@@ -39,6 +39,10 @@
     {
       "name": "nacion",
       "fetchURL": "https://mercados.ambito.com/dolarnacion/variacion"
+    },
+    {
+      "name": "cripto",
+      "fetchURL": "https://mercados.ambito.com/dolarcripto/variacion"
     }
   ],
   "defaultCurrency": "ccl",
