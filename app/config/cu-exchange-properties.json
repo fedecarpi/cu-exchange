@@ -45,6 +45,7 @@
       "fetchURL": "https://mercados.ambito.com/dolarcripto/variacion"
     }
   ],
+  "theme": "system",
   "defaultCurrency": "ccl",
   "showCurrencies": [
     "ccl",

@@ -28,6 +28,22 @@
     </section>
 
     <section class="section">
+      <span class="section-label" id="theme-label">{{ 'PREFERENCES.THEME' | translate }}</span>
+      <span class="section-hint">{{ 'PREFERENCES.THEME_HINT' | translate }}</span>
+      <div class="theme-toggle" role="radiogroup" aria-labelledby="theme-label">
+        <button *ngFor="let option of themeOptions"
+                type="button"
+                role="radio"
+                class="theme-option"
+                [class.active]="theme === option.id"
+                [attr.aria-checked]="theme === option.id"
+                (click)="selectTheme(option.id)">
+          <i class="bi" [ngClass]="option.icon"></i>{{ option.label | translate }}
+        </button>
+      </div>
+    </section>
+
+    <section class="section">
       <div class="section-header">
         <span class="section-label" id="shown-label">{{ 'PREFERENCES.SHOWN' | translate }}</span>
         <span class="counter tabular" [class.full]="showCurrencies.length >= max" [@shake]="shakeCount">

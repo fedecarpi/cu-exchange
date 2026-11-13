@@ -22,10 +22,13 @@ export interface QuotationConfig {
   historyURL?: string;
 }
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+
 export interface AppPreferences {
   quotations: QuotationConfig[];
   defaultCurrency: string;
   showCurrencies: string[];
+  theme?: ThemeMode;
 }
 
 export type QuotesStatus = 'idle' | 'loading' | 'refreshing' | 'ready' | 'error';

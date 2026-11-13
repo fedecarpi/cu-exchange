@@ -117,6 +117,44 @@
   }
 }
 
+.theme-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-option {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease-out);
+
+  &:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+  }
+
+  &.active {
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border-color: transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
 .counter {
   padding: 1px 8px;
   border-radius: var(--radius-pill);

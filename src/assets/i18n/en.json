@@ -27,6 +27,11 @@
   "PREFERENCES": {
     "TITLE": "Preferences",
     "SUBTITLE": "Choose what you see in the menu bar and the popup.",
+    "THEME": "Appearance",
+    "THEME_HINT": "Applied to the popup, the history and this window.",
+    "THEME_SYSTEM": "System",
+    "THEME_LIGHT": "Light",
+    "THEME_DARK": "Dark",
     "TRAY_CURRENCY": "Menu bar currency",
     "TRAY_CURRENCY_HINT": "Shown next to the tray icon.",
     "SHOWN": "Popup currencies",

@@ -39,6 +39,12 @@ describe('PreferencesComponent', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('PREFERENCES.TITLE');
   });
 
+  it('should change the theme selection', () => {
+    expect(component.theme).toBe('system');
+    component.selectTheme('dark');
+    expect(component.theme).toBe('dark');
+  });
+
   it('should toggle currencies up to the maximum', () => {
     component.toggleCurrency('mep');
     expect(component.showCurrencies).toEqual(['oficial', 'ccl', 'mep']);

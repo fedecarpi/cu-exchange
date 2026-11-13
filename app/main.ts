@@ -55,6 +55,11 @@ function themeBackgroundColor() {
   return nativeTheme.shouldUseDarkColors ? '#0e131b' : '#f5f7fb';
 }
 
+function applyTheme(jsonProperties) {
+  const theme = jsonProperties && jsonProperties.theme;
+  nativeTheme.themeSource = theme === 'light' || theme === 'dark' ? theme : 'system';
+}
+
 function rendererURL(route: string) {
   if (serve) {
     return 'http://localhost:4200/#/' + route;
@@ -128,6 +133,7 @@ try {
     // Some APIs can only be used after this event occurs.
     // Added 400 ms to fix the black background issue while using transparent window. More detais at https://github.com/electron/electron/issues/15947
     app.on('ready', () => {
+      applyTheme(getJsonProperties());
       setTimeout(()=> {
         createTrayApp();
         if (isMac) {
@@ -379,13 +385,15 @@ function secondaryWindowOptions(title: string, width: number, height: number) {
 
 function createPreferenceWindow() {
   preferenceWin = new BrowserWindow({
-    ...secondaryWindowOptions('Preferences', 440, 480),
+    ...secondaryWindowOptions('Preferences', 440, 640),
     alwaysOnTop: true,
     resizable: (serve)?true:false,
   });
 
   preferenceWin.on('close', (e) => {
     preferenceWin = null;
+    // Revert a theme preview that was not saved.
+    applyTheme(getJsonProperties());
   })
 
   preferenceWin.once('ready-to-show', () => preferenceWin && preferenceWin.show());
@@ -438,6 +446,10 @@ ipcMain.on('load-preferences', (event, value) => {
 });
 
 
+ipcMain.on('preview-theme', (event, theme) => {
+  nativeTheme.themeSource = theme === 'light' || theme === 'dark' ? theme : 'system';
+});
+
 ipcMain.on('close-preference-win', (event, value) => {
   if (preferenceWin) {
     preferenceWin.close();
@@ -449,6 +461,8 @@ ipcMain.on('save-preferences', (event, newPreferences) => {
   if (newPreferences) {
     jsonProperties.defaultCurrency = newPreferences.defaultCurrency;
     jsonProperties.showCurrencies = newPreferences.showCurrencies;
+    jsonProperties.theme = newPreferences.theme === 'light' || newPreferences.theme === 'dark'
+      ? newPreferences.theme : 'system';
     try {
       fs.writeFileSync(preferencesFilePath, JSON.stringify(jsonProperties, null, 2), 'utf8');
     } catch (err) {

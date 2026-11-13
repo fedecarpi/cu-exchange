@@ -2,7 +2,7 @@ import { animate, keyframes, style, transition, trigger } from '@angular/animati
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ElectronService, QuotesService } from '../core/services';
+import { ElectronService, QuotesService, ThemeMode } from '../core/services';
 
 export const MAX_SHOWN_CURRENCIES = 3;
 
@@ -35,12 +35,18 @@ export const MAX_SHOWN_CURRENCIES = 3;
 export class PreferencesComponent implements OnInit, OnDestroy {
   readonly max = MAX_SHOWN_CURRENCIES;
   readonly isMac = !!window.process && window.process.platform === 'darwin';
+  readonly themeOptions: { id: ThemeMode; icon: string; label: string }[] = [
+    { id: 'system', icon: 'bi-circle-half', label: 'PREFERENCES.THEME_SYSTEM' },
+    { id: 'light', icon: 'bi-sun', label: 'PREFERENCES.THEME_LIGHT' },
+    { id: 'dark', icon: 'bi-moon', label: 'PREFERENCES.THEME_DARK' }
+  ];
 
   loading = true;
   saved = false;
   currencies: string[] = [];
   defaultCurrency: string | null = null;
   showCurrencies: string[] = [];
+  theme: ThemeMode = 'system';
   shakeCount = 0;
   maxReachedVisible = false;
 
@@ -59,6 +65,7 @@ export class PreferencesComponent implements OnInit, OnDestroy {
         this.defaultCurrency = preferences.defaultCurrency;
         this.currencies = preferences.quotations.map(q => q.name);
         this.showCurrencies = [...preferences.showCurrencies];
+        this.theme = preferences.theme ?? 'system';
         this.loading = false;
       }
     });
@@ -90,6 +97,13 @@ export class PreferencesComponent implements OnInit, OnDestroy {
     this.showCurrencies = [...this.showCurrencies, cur];
   }
 
+  selectTheme(theme: ThemeMode): void {
+    this.theme = theme;
+    if (this.electronService.isElectron) {
+      this.electronService.ipcRenderer.send('preview-theme', theme);
+    }
+  }
+
   cancel(): void {
     this.electronService.ipcRenderer.send('close-preference-win', null);
   }
@@ -102,7 +116,8 @@ export class PreferencesComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.electronService.ipcRenderer.send('save-preferences', {
         defaultCurrency: this.defaultCurrency,
-        showCurrencies: this.showCurrencies
+        showCurrencies: this.showCurrencies,
+        theme: this.theme
       });
     }, 650);
   }

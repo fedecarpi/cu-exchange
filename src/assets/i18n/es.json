@@ -27,6 +27,11 @@
   "PREFERENCES": {
     "TITLE": "Preferencias",
     "SUBTITLE": "Elegí qué ver en la barra de menú y en el popup.",
+    "THEME": "Apariencia",
+    "THEME_HINT": "Se aplica al popup, al histórico y a esta ventana.",
+    "THEME_SYSTEM": "Sistema",
+    "THEME_LIGHT": "Claro",
+    "THEME_DARK": "Oscuro",
     "TRAY_CURRENCY": "Moneda de la barra de menú",
     "TRAY_CURRENCY_HINT": "Se muestra junto al ícono de la bandeja.",
     "SHOWN": "Monedas del popup",
