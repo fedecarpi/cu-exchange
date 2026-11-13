@@ -1,33 +1,60 @@
-<div class="container" style="padding: 0.2rem;">
-  <div *ngIf="loading" class="row" style="margin-right: 0; margin-top: 3rem;">
-    <div class="col text-center" style="padding-right: 0;">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
+<div class="popup" #container>
+  <div *ngIf="!hasQuotes && status !== 'error'" class="cards">
+    <div *ngFor="let slot of skeletonSlots" class="skeleton-card">
+      <div class="skeleton-row">
+        <div class="skeleton" style="width: 52px; height: 9px;"></div>
+        <div class="skeleton" style="width: 42px; height: 14px; border-radius: 999px;"></div>
+      </div>
+      <div class="skeleton-row">
+        <div class="skeleton" style="width: 96px; height: 18px;"></div>
+        <div class="skeleton" style="width: 72px; height: 22px;"></div>
       </div>
     </div>
   </div>
-  <div *ngIf="!loading">
-    <div *ngFor="let c of showCurrencies" class="row" style="margin-right: 0;">
-      <div class="col" style="padding-right: 0;">
-        <div *ngIf="dolData[c]['class-variacion'] == 'up' || dolData[c]['class-variacion'] == 'equal'" class="alert alert-success currency-box" role="alert" data-bs-theme="dark">
-          {{c | uppercase}}<span style="float: right;"><i class="bi bi-caret-up-fill"></i>{{ dolData[c].variacion }} </span>
-          <br><i class="bi bi-currency-dollar"></i>{{ dolData[c].compra }}
-        </div>
-        <div *ngIf="dolData[c]['class-variacion'] == 'down'" class="alert alert-danger currency-box" role="alert" data-bs-theme="dark">
-          {{c | uppercase}}<span style="float: right;"><i class="bi bi-caret-down-fill"></i>{{ dolData[c].variacion }} </span>
-          <br><i class="bi bi-currency-dollar"></i>{{ dolData[c].compra }}
-        </div>
-      </div>
-    </div>
-    <div class="row" style="margin-right: 0;">
-      <div class="col-8" style="padding-right: 0;">
-        <span class="last-update-font">{{ dolData[showCurrencies[0]]['fecha'] }}</span>
-      </div>
-      <div class="col-4 text-end" style="padding-right: 0; padding-left: 0;">
-        <i (click)="getCurrencyExchanges()" class="bi-arrow-clockwise icon-white-pointer"></i>
-        <i (click)="showPreferences()" class="bi-gear icon-white-pointer"></i>
-        <i (click)="exit()" class="bi-x icon-white-pointer"></i>
-      </div>
-    </div>
+
+  <div *ngIf="!hasQuotes && status === 'error'" class="state" @fade>
+    <div class="state-icon"><i class="bi bi-wifi-off"></i></div>
+    <p>{{ 'HOME.ERROR_TITLE' | translate }}</p>
+    <button type="button" class="btn-ui primary" (click)="refresh()">
+      <i class="bi bi-arrow-clockwise"></i>{{ 'HOME.RETRY' | translate }}
+    </button>
   </div>
+
+  <div *ngIf="hasQuotes" class="cards" [@listStagger]="quotes.length">
+    <app-currency-card
+      *ngFor="let quote of quotes; trackBy: trackByName"
+      [quote]="quote"
+      [history]="histories[quote.name] ?? null"
+      (opened)="openHistory($event)">
+    </app-currency-card>
+  </div>
+
+  <footer class="footer">
+    <div class="status" [ngSwitch]="true">
+      <ng-container *ngSwitchCase="status === 'error' && hasQuotes">
+        <span class="status-dot error"></span>
+        <span>{{ 'HOME.ERROR_STALE' | translate }}</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="status === 'refreshing' || status === 'loading'">
+        <span class="status-dot busy"></span>
+        <span>{{ 'HOME.UPDATING' | translate }}</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="!!lastUpdated">
+        <span class="status-dot live"></span>
+        <span [attr.title]="quotes[0]?.date">{{ 'HOME.UPDATED' | translate: { time: (lastUpdated | timeAgo: now) } }}</span>
+      </ng-container>
+    </div>
+    <div class="actions">
+      <button type="button" class="icon-btn" [attr.title]="'HOME.REFRESH' | translate" (click)="refresh()"
+              [disabled]="status === 'loading' || status === 'refreshing'">
+        <i class="bi bi-arrow-clockwise" [class.spin]="status === 'loading' || status === 'refreshing'"></i>
+      </button>
+      <button type="button" class="icon-btn" [attr.title]="'HOME.PREFERENCES' | translate" (click)="showPreferences()">
+        <i class="bi bi-gear"></i>
+      </button>
+      <button type="button" class="icon-btn" [attr.title]="'HOME.QUIT' | translate" (click)="exit()">
+        <i class="bi bi-power"></i>
+      </button>
+    </div>
+  </footer>
 </div>

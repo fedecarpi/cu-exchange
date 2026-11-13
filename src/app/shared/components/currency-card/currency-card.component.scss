@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), transform var(--duration-fast) ease;
+
+  &:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+
+    .open-hint {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  &:active {
+    transform: scale(0.985);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.name {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--neutral);
+  background: var(--neutral-soft);
+
+  .bi {
+    font-size: 8px;
+  }
+
+  &.up {
+    color: var(--up);
+    background: var(--up-soft);
+  }
+
+  &.down {
+    color: var(--down);
+    background: var(--down-soft);
+  }
+}
+
+.card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+
+  .currency {
+    margin-right: 2px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+}
+
+.chart {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chart-skeleton {
+  width: 72px;
+  height: 22px;
+}
+
+.open-hint {
+  position: absolute;
+  right: -10px;
+  font-size: 9px;
+  color: var(--text-subtle);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity var(--duration) ease, transform var(--duration) var(--ease-out);
+}
+
+.spread {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-subtle);
+
+  strong {
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+}
+
+.dot-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-subtle);
+}

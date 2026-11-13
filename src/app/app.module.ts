@@ -1,5 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { LOCALE_ID, NgModule } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEsAr from '@angular/common/locales/es-AR';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { CoreModule } from './core/core.module';
@@ -13,8 +16,11 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { HomeModule } from './home/home.module';
 import { PreferencesModule } from './preferences/preferences.module';
+import { HistoryModule } from './history/history.module';
 
 import { AppComponent } from './app.component';
+
+registerLocaleData(localeEsAr);
 
 // AoT requires an exported function for factories
 const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -23,12 +29,14 @@ const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new Transl
   declarations: [AppComponent],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
     CoreModule,
     SharedModule,
     HomeModule,
     PreferencesModule,
+    HistoryModule,
     AppRoutingModule,
     TranslateModule.forRoot({
       loader: {
@@ -38,7 +46,7 @@ const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new Transl
       }
     })
   ],
-  providers: [],
+  providers: [{ provide: LOCALE_ID, useValue: 'es-AR' }],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

@@ -3,15 +3,31 @@
 Currency Exchange Tray info app, powered by Angular 15 with Electron 22 (Typescript + SASS + Hot Reload).
 
 
+## Features
+
+- Tray popup with up to 3 quotes: animated price changes, daily variation, buy/sell spread and a 30-day sparkline.
+- History window (click any card): area chart powered by [lightweight-charts](https://github.com/tradingview/lightweight-charts) with 7D / 1M / 3M / 6M / 1A ranges, period change, high, low and average.
+- Light and dark themes that follow the OS, native vibrancy on macOS, bundled Inter font (works offline).
+- English and Spanish translations (picked from the system language).
+
 ## Screenshots
 
-Main tray window
+Main tray window (dark and light themes)
 
-![alt](./doc/main.png)
+![alt](./doc/main.png) ![alt](./doc/main-light.png)
+
+History
+
+![alt](./doc/history.png)
 
 Preferences
 
 ![alt](./doc/preferences.png)
+
+## Quotations configuration
+
+Quotations are defined in `app/config/cu-exchange-properties.json`. Each entry needs a `name` and a `fetchURL` pointing to an Ámbito `/variacion` endpoint.
+History is derived from it by replacing `/variacion` with `/historico-general/{from}/{to}`. For sources that don't follow that pattern, add an optional `historyURL` with `{from}` and `{to}` placeholders (dates as `yyyy-mm-dd`). Currencies without history (e.g. `futuro`) simply hide the chart.
 
 __Warning__
 Known issues on Linux env:

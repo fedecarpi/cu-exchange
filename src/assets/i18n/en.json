@@ -1,12 +1,39 @@
 {
-  "PAGES": {
-      "HOME": {
-          "TITLE": "App works !",
-          "GO_TO_DETAIL": "Go to Detail"
-      },
-      "PREFERENCES": {
-        "TITLE": "Preferences",
-        "BACK_TO_HOME": "Back to Home"
-    }
+  "HOME": {
+    "UPDATED": "Updated {{time}}",
+    "UPDATING": "Updating…",
+    "REFRESH": "Refresh",
+    "PREFERENCES": "Preferences",
+    "QUIT": "Quit",
+    "ERROR_TITLE": "Couldn't load quotes",
+    "ERROR_STALE": "Update failed",
+    "RETRY": "Retry",
+    "EMPTY": "No currencies selected",
+    "BUY": "Buy",
+    "SELL": "Sell",
+    "OPEN_HISTORY": "View history"
+  },
+  "HISTORY": {
+    "TITLE": "History",
+    "CURRENT": "Current value",
+    "PERIOD_CHANGE": "Period change",
+    "HIGH": "High",
+    "LOW": "Low",
+    "AVERAGE": "Average",
+    "NO_DATA": "No historical data available for this currency",
+    "ERROR": "Couldn't load history",
+    "RETRY": "Retry"
+  },
+  "PREFERENCES": {
+    "TITLE": "Preferences",
+    "SUBTITLE": "Choose what you see in the menu bar and the popup.",
+    "TRAY_CURRENCY": "Menu bar currency",
+    "TRAY_CURRENCY_HINT": "Shown next to the tray icon.",
+    "SHOWN": "Popup currencies",
+    "SHOWN_HINT": "Pick up to {{max}}.",
+    "MAX_REACHED": "You can pick up to {{max}} currencies",
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "SAVED": "Saved"
   }
 }

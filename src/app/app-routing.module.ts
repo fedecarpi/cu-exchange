@@ -4,6 +4,7 @@ import { PageNotFoundComponent } from './shared/components';
 
 import { HomeRoutingModule } from './home/home-routing.module';
 import { PreferencesRoutingModule } from './preferences/preferences-routing.module';
+import { HistoryRoutingModule } from './history/history-routing.module';
 
 const routes: Routes = [
   {
@@ -21,7 +22,8 @@ const routes: Routes = [
   imports: [
     RouterModule.forRoot(routes, { useHash: true }),
     HomeRoutingModule,
-    PreferencesRoutingModule
+    PreferencesRoutingModule,
+    HistoryRoutingModule
   ],
   exports: [RouterModule]
 })
