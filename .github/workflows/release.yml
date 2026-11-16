@@ -45,8 +45,10 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ inputs.version }}"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix app
+          # Use npm pkg set (not npm version) to avoid the local "version" lifecycle
+          # script that runs conventional-changelog.
+          npm pkg set "version=$VERSION"
+          npm pkg set "version=$VERSION" --prefix app
 
       - name: Install dependencies
         run: |
