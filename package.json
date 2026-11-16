@@ -37,6 +37,7 @@
     "electron:local": "npm run build:prod && electron .",
     "electron:build": "npm run build:prod && electron-builder build --publish=never",
     "electron:build-linux": "npm run build:prod && electron-builder build --linux --publish=never",
+    "release": "gh workflow run release.yml -f version=${npm_config_release:?Usage: npm run release --release=1.1.0}",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "e2e": "npm run build:prod && playwright test -c e2e/playwright.config.ts e2e/",

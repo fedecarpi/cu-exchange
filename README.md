@@ -116,8 +116,26 @@ Maybe you only want to execute the application in the browser with hot reload? J
 | `npm run web:build`      | Build the app that can be used directly in the web browser. Your built files are in the /dist folder. |
 | `npm run electron:local` | Builds your application and start electron locally                                                    |
 | `npm run electron:build` | Builds your application and creates an app consumable based on your operating system                  |
+| `npm run release --release=X.Y.Z` | Triggers GitHub Actions to build Linux/macOS/Windows and publish a GitHub Release           |
 
 **Your application is optimised. Only /dist folder and NodeJS dependencies are included in the final bundle.**
+
+## Releasing
+
+Publish installers for Linux (`.deb`), macOS (`.dmg`) and Windows (portable `.exe`) via a manual GitHub Actions workflow:
+
+```bash
+# requires GitHub CLI (gh) authenticated against this repo
+npm run release --release=1.1.0
+
+# or directly:
+gh workflow run release.yml -f version=1.1.0
+
+# pre-release:
+gh workflow run release.yml -f version=1.1.0-beta.1 -f prerelease=true
+```
+
+You can also run it from GitHub → Actions → Release → Run workflow. Builds are unsigned (Gatekeeper / SmartScreen may warn).
 
 ## You want to use a specific lib (like rxjs) in electron main thread ?
 
