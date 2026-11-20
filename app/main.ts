@@ -1,11 +1,12 @@
 import { green, red } from 'ansicolor';
-import { Tray, app, ipcMain, BrowserWindow, screen, nativeTheme } from 'electron';
+import { Tray, app, ipcMain, BrowserWindow, Point, nativeTheme } from 'electron';
 import * as fs from 'fs';
 import { menubar } from 'menubar';
 import * as path from 'path';
 import { log } from 'electron-log';
 const os = require('os');
 import { CATEGORY_SOURCES, NormalizedQuote, PROVIDERS, QuotationConfig, Source, normalizeQuotation } from './providers';
+import { buildTrayMenu, popupPositionFor, trayAnchor } from './tray-linux';
 
 const platforms = {
   WINDOWS: 'WINDOWS',
@@ -29,6 +30,7 @@ const platformsNames = {
 
 const currentPlatform = platformsNames[os.platform()];
 const isMac = currentPlatform == platforms.MAC;
+const isLinux = currentPlatform == platforms.LINUX;
 
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
@@ -43,6 +45,7 @@ let tray = null
 let preferenceWin: BrowserWindow = null;
 let historyWin: BrowserWindow = null;
 let preferencesFilePath = null;
+let popupAnchor: Point | null = null;
 const historyCache = new Map<string, { timestamp: number; points: { date: string; value: number }[] }>();
 
 function themeBackgroundColor() {
@@ -85,7 +88,6 @@ function createTrayApp() {
         showDockIcon: false,
         preloadWindow: true,
         browserWindow: {
-          x: (currentPlatform == platforms.LINUX)?screen.getCursorScreenPoint().x - 20:undefined,
           width: POPUP_WIDTH,
           height: 260,
           minHeight: POPUP_MIN_HEIGHT,
@@ -104,16 +106,35 @@ function createTrayApp() {
           }}
       });
 
+      if (isLinux) {
+        setupLinuxTray();
+      }
   }
+}
+
+function setupLinuxTray() {
+  // menubar has no tray bounds on Linux and falls back to a screen corner; it reads browserWindow.x/y right after 'show'.
+  mb.on('show', () => {
+    popupAnchor = trayAnchor(tray);
+    const [width, height] = mb.window.getSize();
+    const { x, y } = popupPositionFor(popupAnchor, { width, height });
+    mb.setOption('browserWindow', { ...mb.getOption('browserWindow'), x, y });
+  });
+  mb.on('ready', () => updateTrayMenu(null));
+}
+
+function updateTrayMenu(header: string | null) {
+  tray.setContextMenu(buildTrayMenu(header, app.getLocale(), {
+    show: () => mb.showWindow(),
+    refresh: () => getCurrencyValues(null),
+    preferences: () => openPreferences(),
+    quit: () => app.quit()
+  }));
 }
 
 try {
 
-  if (serve) {
-    preferencesFilePath = path.resolve(__dirname, 'config/cu-exchange-properties.json');
-  } else {
-    preferencesFilePath = path.resolve(__dirname, '../app/config/cu-exchange-properties.json');
-  }
+  preferencesFilePath = resolvePreferencesPath();
 
   const gotTheLock = app.requestSingleInstanceLock();
   if (!gotTheLock) {
@@ -166,6 +187,23 @@ try {
   log(e);
 }
 
+// Packaged builds ship the defaults inside read-only resources (e.g. /opt on the Linux .deb),
+// so the user's copy lives in userData, seeded from the bundled file on first run.
+function resolvePreferencesPath() {
+  const bundled = serve
+    ? path.resolve(__dirname, 'config/cu-exchange-properties.json')
+    : path.resolve(__dirname, '../app/config/cu-exchange-properties.json');
+  if (!app.isPackaged) {
+    return bundled;
+  }
+  const userFile = path.join(app.getPath('userData'), 'cu-exchange-properties.json');
+  if (!fs.existsSync(userFile)) {
+    fs.mkdirSync(path.dirname(userFile), { recursive: true });
+    fs.copyFileSync(bundled, userFile);
+  }
+  return userFile;
+}
+
 function getJsonProperties() {
   let rawdata = fs.readFileSync(preferencesFilePath, 'utf8');
   let jsonPref = JSON.parse(rawdata);
@@ -198,8 +236,14 @@ function updateTray(quotes: Record<string, NormalizedQuote>) {
   const prefix = quote.currency == 'USD' ? 'US$' : '$';
   const value = trayNumberFormatter.format(quote.value);
   const variation = trayNumberFormatter.format(quote.variation) + '%';
+  const arrow = quote.trend == 'up' || quote.trend == 'equal' ? '↗' : '↘';
   tray.setToolTip(selectedCurrency + ': ' + prefix + value + ' (' + variation + ')');
-  if (quote.trend == 'up' || quote.trend == 'equal') {
+  // Tray.setTitle only renders on macOS, so on Linux the value lives in the tooltip and the menu header.
+  if (isLinux) {
+    updateTrayMenu(label + ': ' + prefix + value + ' ' + arrow + ' (' + variation + ')');
+    return;
+  }
+  if (arrow == '↗') {
     tray.setTitle(label + ': ' + green(value + '↗'));
   } else {
     tray.setTitle(label + ': ' + red(value + '↘'));
@@ -282,8 +326,20 @@ ipcMain.on('resize-popup', (event, height) => {
   if (mb && mb.window && typeof height === 'number' && height > 0) {
     const newHeight = Math.max(POPUP_MIN_HEIGHT, Math.ceil(height));
     const [width, currentHeight] = mb.window.getSize();
-    if (currentHeight !== newHeight) {
+    if (currentHeight === newHeight) {
+      return;
+    }
+    if (isLinux && !mb.window.isResizable()) {
+      // GTK pins min = max size hints on non-resizable windows, so setSize can't shrink them.
+      mb.window.setResizable(true);
       mb.window.setSize(width, newHeight);
+      mb.window.setResizable(false);
+    } else {
+      mb.window.setSize(width, newHeight);
+    }
+    if (isLinux && popupAnchor && mb.window.isVisible()) {
+      const { x, y } = popupPositionFor(popupAnchor, { width, height: newHeight });
+      mb.window.setPosition(x, y);
     }
   }
 });
@@ -294,6 +350,8 @@ ipcMain.on('close-app', (event, value) => {
 
 function secondaryWindowOptions(title: string, width: number, height: number) {
   return {
+    // Linux and Windows would otherwise show Electron's default File/Edit/View menu bar.
+    autoHideMenuBar: !isMac,
     width,
     height,
     title,
@@ -321,12 +379,15 @@ function createPreferenceWindow() {
     applyTheme(getJsonProperties());
   })
 
+  if (!isMac) {
+    preferenceWin.removeMenu();
+  }
   preferenceWin.once('ready-to-show', () => preferenceWin && preferenceWin.show());
   preferenceWin.center();
   preferenceWin.loadURL(rendererURL('preferences'));
 }
 
-ipcMain.on('show-preferences', (event, value) => {
+function openPreferences() {
   //Check if preference win is already open
   if (preferenceWin) {
     preferenceWin.reload();
@@ -334,7 +395,9 @@ ipcMain.on('show-preferences', (event, value) => {
   } else {
     createPreferenceWindow();
   }
-});
+}
+
+ipcMain.on('show-preferences', () => openPreferences());
 
 function createHistoryWindow(name: string) {
   historyWin = new BrowserWindow({
@@ -347,6 +410,9 @@ function createHistoryWindow(name: string) {
     historyWin = null;
   });
 
+  if (!isMac) {
+    historyWin.removeMenu();
+  }
   historyWin.once('ready-to-show', () => historyWin && historyWin.show());
   historyWin.center();
   historyWin.loadURL(rendererURL('history/' + encodeURIComponent(name)));

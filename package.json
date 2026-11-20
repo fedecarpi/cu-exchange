@@ -2,6 +2,7 @@
   "name": "cu-exchange",
   "version": "1.0.0",
   "description": "Currency Exchange Tray info app, powered by Angular 15 with Electron 22 (Typescript + SASS + Hot Reload)",
+  "homepage": "https://github.com/fedecarpi/cu-exchange",
   "author": {
     "name": "Federico Carpi",
     "email": "fedecarpi@gmail.com"
@@ -41,6 +42,7 @@
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "e2e": "npm run build:prod && playwright test -c e2e/playwright.config.ts e2e/",
+    "linux:tray": "bash scripts/linux-tray/run.sh",
     "e2e:show-trace": "playwright show-trace e2e/tracing/trace.zip",
     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
   },
