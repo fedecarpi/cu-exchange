@@ -2,47 +2,99 @@
   "quotations": [
     {
       "name": "oficial",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolar/oficial/variacion"
     },
     {
       "name": "ahorro",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarahorro/variacion"
     },
     {
       "name": "tarjeta",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarturista/variacion"
     },
     {
       "name": "qatar",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarqatar/variacion"
     },
     {
       "name": "informal",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolar/informal/variacion"
     },
     {
       "name": "mayorista",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolar/mayorista/variacion"
     },
     {
       "name": "ccl",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarrava/cl/variacion"
     },
     {
       "name": "mep",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarrava/mep/variacion"
     },
     {
       "name": "futuro",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarfuturo/variacion"
     },
     {
       "name": "nacion",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarnacion/variacion"
     },
     {
       "name": "cripto",
+      "category": "dolar",
+      "source": "ambito",
       "fetchURL": "https://mercados.ambito.com/dolarcripto/variacion"
+    },
+    {
+      "name": "GGAL",
+      "category": "acciones",
+      "source": "data912",
+      "symbol": "GGAL"
+    },
+    {
+      "name": "YPFD",
+      "category": "acciones",
+      "source": "data912",
+      "symbol": "YPFD"
+    },
+    {
+      "name": "AAPL",
+      "category": "cedears",
+      "source": "data912",
+      "symbol": "AAPL"
+    },
+    {
+      "name": "AL30D",
+      "category": "bonos",
+      "source": "data912",
+      "symbol": "AL30D"
+    },
+    {
+      "name": "BTC",
+      "category": "cripto",
+      "source": "binance",
+      "symbol": "BTCUSDT"
     }
   ],
   "theme": "system",
@@ -50,6 +102,10 @@
   "showCurrencies": [
     "ccl",
     "informal",
-    "nacion"
+    "nacion",
+    "GGAL",
+    "AAPL",
+    "AL30D",
+    "BTC"
   ]
 }

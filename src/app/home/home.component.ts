@@ -2,11 +2,14 @@ import { animate, query, stagger, style, transition, trigger } from '@angular/an
 import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Subject, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
-import { ElectronService, Quote, QuotesService, QuotesStatus } from '../core/services';
+import {
+  AppPreferences, CATEGORIES, Category, ElectronService, MAX_SHOWN_PER_CATEGORY, Quote, QuotesService, QuotesStatus, categoryOf
+} from '../core/services';
 
 const REFRESH_INTERVAL_MS = 50000;
 const HISTORY_REFRESH_MS = 60 * 60 * 1000;
 const CLOCK_TICK_MS = 30000;
+const ACTIVE_TAB_KEY = 'home.activeCategory';
 
 @Component({
   selector: 'app-home',
@@ -34,11 +37,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quotes: Quote[] = [];
   showCurrencies: string[] = [];
+  tabs: typeof CATEGORIES = [];
+  activeCategory: Category = (localStorage.getItem(ACTIVE_TAB_KEY) as Category) || 'dolar';
   histories: Record<string, number[] | null> = {};
   status: QuotesStatus = 'idle';
   lastUpdated: Date | null = null;
   now = Date.now();
 
+  private preferences: AppPreferences | null = null;
+  private allQuotes: Record<string, Quote> = {};
   private destroy$ = new Subject<void>();
   private timers: ReturnType<typeof setInterval>[] = [];
   private resizeObserver?: ResizeObserver;
@@ -54,7 +61,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get skeletonSlots(): number[] {
-    return Array.from({ length: this.showCurrencies.length || 3 }, (_, i) => i);
+    return Array.from({ length: this.activeNames.length || 3 }, (_, i) => i);
+  }
+
+  private get activeNames(): string[] {
+    return this.showCurrencies
+      .filter(name => this.categoryOf(name) === this.activeCategory)
+      .slice(0, MAX_SHOWN_PER_CATEGORY);
   }
 
   ngOnInit(): void {
@@ -64,8 +77,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     combineLatest([this.quotesService.quotes$, this.quotesService.preferences$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([quotes, preferences]) => {
+        this.preferences = preferences ?? this.preferences;
         this.showCurrencies = preferences?.showCurrencies ?? this.showCurrencies;
-        this.quotes = this.showCurrencies.filter(name => quotes[name]).map(name => quotes[name]);
+        this.allQuotes = quotes;
+        this.updateTabs();
+        this.updateQuotes();
       });
 
     this.quotesService.preferences$
@@ -140,8 +156,34 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return quote.name;
   }
 
+  selectTab(category: Category): void {
+    if (category === this.activeCategory) {
+      return;
+    }
+    this.activeCategory = category;
+    localStorage.setItem(ACTIVE_TAB_KEY, category);
+    this.updateQuotes();
+    this.loadHistories();
+  }
+
+  private categoryOf(name: string): Category {
+    return categoryOf(this.preferences?.quotations.find(q => q.name === name));
+  }
+
+  private updateTabs(): void {
+    const used = new Set(this.showCurrencies.map(name => this.categoryOf(name)));
+    this.tabs = CATEGORIES.filter(c => used.has(c.id));
+    if (this.tabs.length > 0 && !used.has(this.activeCategory)) {
+      this.activeCategory = this.tabs[0].id;
+    }
+  }
+
+  private updateQuotes(): void {
+    this.quotes = this.activeNames.filter(name => this.allQuotes[name]).map(name => this.allQuotes[name]);
+  }
+
   private loadHistories(force = false): void {
-    this.showCurrencies.forEach(name => {
+    this.activeNames.forEach(name => {
       if (!force && this.histories[name] !== undefined) {
         return;
       }

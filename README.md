@@ -5,7 +5,8 @@ Currency Exchange Tray info app, powered by Angular 15 with Electron 22 (Typescr
 
 ## Features
 
-- Tray popup with up to 3 quotes: animated price changes, daily variation, buy/sell spread and a 30-day sparkline.
+- Dollar quotes (Ámbito) plus BYMA stocks, CEDEARs, bonds and crypto, searchable and addable from Preferences.
+- Tray popup with one tab per category and up to 5 quotes each: animated price changes, daily variation, buy/sell spread and a 30-day sparkline.
 - History window (click any card): area chart powered by [lightweight-charts](https://github.com/tradingview/lightweight-charts) with 7D / 1M / 3M / 6M / 1A ranges, period change, high, low and average.
 - Light and dark themes that follow the OS, native vibrancy on macOS, bundled Inter font (works offline).
 - English and Spanish translations (picked from the system language).
@@ -26,8 +27,25 @@ Preferences
 
 ## Quotations configuration
 
-Quotations are defined in `app/config/cu-exchange-properties.json`. Each entry needs a `name` and a `fetchURL` pointing to an Ámbito `/variacion` endpoint.
-History is derived from it by replacing `/variacion` with `/historico-general/{from}/{to}`. For sources that don't follow that pattern, add an optional `historyURL` with `{from}` and `{to}` placeholders (dates as `yyyy-mm-dd`). Currencies without history (e.g. `futuro`) simply hide the chart.
+Quotations are defined in `app/config/cu-exchange-properties.json`. Market instruments are usually added from Preferences, which searches each provider's catalog, but they can also be edited by hand. Each entry has:
+
+| Field      | Description                                                                 |
+|------------|-----------------------------------------------------------------------------|
+| `name`     | Unique id shown in the UI and used by `defaultCurrency` / `showCurrencies`  |
+| `category` | `dolar`, `acciones`, `cedears`, `bonos` or `cripto`                         |
+| `source`   | `ambito`, `data912` or `binance`                                            |
+| `symbol`   | Ticker for data912 / Binance (e.g. `GGAL`, `AL30D`, `BTCUSDT`). Defaults to `name` |
+| `fetchURL` | Ámbito only: the `/variacion` endpoint                                      |
+
+Entries without `category` / `source` are treated as Ámbito dollars, so older config files keep working.
+
+Data sources (all free, no API key):
+
+- **[Ámbito](https://www.ambito.com/contenidos/dolar.html)**, for dollar quotes. History is derived from `fetchURL` by replacing `/variacion` with `/historico-general/{from}/{to}`. For endpoints that don't follow that pattern, add an optional `historyURL` with `{from}` and `{to}` placeholders (dates as `yyyy-mm-dd`). Currencies without history (e.g. `futuro`) simply hide the chart.
+- **[data912](https://data912.com)**, for BYMA stocks (`/live/arg_stocks`), CEDEARs (`/live/arg_cedears`) and bonds (`/live/arg_bonds`), with daily history from `/historical/{stocks|cedears|bonds}/{ticker}`. Each category is a single request cached for 30 seconds. CEDEAR and bond tickers ending in `D` (MEP) or `C` (CCL) are shown in US$.
+- **[Binance public API](https://developers.binance.com/docs/binance-spot-api-docs/rest-api)**, for crypto against USDT (`/api/v3/ticker/24hr`, with history from `/api/v3/klines`).
+
+If one provider fails, the others keep updating; the popup only shows an error when every provider fails.
 
 __Warning__
 Known issues on Linux env:

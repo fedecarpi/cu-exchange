@@ -34,11 +34,25 @@
     "THEME_DARK": "Oscuro",
     "TRAY_CURRENCY": "Moneda de la barra de menú",
     "TRAY_CURRENCY_HINT": "Se muestra junto al ícono de la bandeja.",
-    "SHOWN": "Monedas del popup",
-    "SHOWN_HINT": "Elegí hasta {{max}}.",
-    "MAX_REACHED": "Podés elegir hasta {{max}} monedas",
+    "SHOWN": "Cotizaciones del popup",
+    "SHOWN_HINT": "Elegí hasta {{max}} por categoría; cada una se muestra en su solapa.",
+    "MAX_REACHED": "Podés elegir hasta {{max}} cotizaciones por categoría",
+    "REMOVE": "Quitar",
+    "ADD": "Agregar instrumentos",
+    "ADD_HINT": "Acciones, CEDEARs y bonos de BYMA (data912) y cripto contra USDT (Binance).",
+    "ADD_ITEM": "Agregar {{name}}",
+    "SEARCH_PLACEHOLDER": "Buscar ticker, ej. GGAL, AAPL, AL30D, BTC",
+    "NO_RESULTS": "No hay instrumentos que coincidan",
+    "CATALOG_EMPTY": "No se pudo cargar el listado de instrumentos",
     "SAVE": "Guardar",
     "CANCEL": "Cancelar",
     "SAVED": "Guardado"
+  },
+  "CATEGORIES": {
+    "DOLAR": "Dólar",
+    "ACCIONES": "Acciones",
+    "CEDEARS": "CEDEARs",
+    "BONOS": "Bonos",
+    "CRIPTO": "Cripto"
   }
 }

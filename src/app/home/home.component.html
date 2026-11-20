@@ -1,4 +1,18 @@
 <div class="popup" #container>
+  <nav *ngIf="tabs.length > 1" class="tabs" role="tablist">
+    <button *ngFor="let tab of tabs"
+            type="button"
+            role="tab"
+            class="tab"
+            [class.active]="tab.id === activeCategory"
+            [attr.aria-selected]="tab.id === activeCategory"
+            [attr.title]="tab.label | translate"
+            (click)="selectTab(tab.id)">
+      <i class="bi" [ngClass]="tab.icon"></i>
+      <span *ngIf="tab.id === activeCategory" class="tab-label">{{ tab.label | translate }}</span>
+    </button>
+  </nav>
+
   <div *ngIf="!hasQuotes && status !== 'error'" class="cards">
     <div *ngFor="let slot of skeletonSlots" class="skeleton-card">
       <div class="skeleton-row">

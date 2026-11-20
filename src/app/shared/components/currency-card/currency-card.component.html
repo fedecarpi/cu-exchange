@@ -14,7 +14,7 @@
   </div>
   <div class="card-body">
     <div class="price tabular">
-      <span class="currency">$</span><span [appAnimatedNumber]="quote.value"></span>
+      <span class="currency">{{ currencySymbol }}</span><span [appAnimatedNumber]="quote.value"></span>
     </div>
     <div class="chart">
       <div *ngIf="history === null" class="skeleton chart-skeleton"></div>

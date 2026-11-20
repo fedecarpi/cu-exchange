@@ -1,6 +1,6 @@
 import { animate, keyframes, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { Quote } from '../../../core/services';
+import { Quote, currencySymbol } from '../../../core/services';
 
 const flashTo = (color: string) => [
   animate('900ms ease-out', keyframes([
@@ -30,6 +30,10 @@ export class CurrencyCardComponent implements OnChanges {
 
   flashState = 'idle';
   private flashCount = 0;
+
+  get currencySymbol(): string {
+    return currencySymbol(this.quote?.currency);
+  }
 
   get trendIcon(): string {
     switch (this.quote?.trend) {

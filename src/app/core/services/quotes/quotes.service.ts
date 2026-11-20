@@ -1,7 +1,9 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { ElectronService } from '../electron/electron.service';
-import { AppPreferences, HISTORY_RANGES, HistoryPoint, HistoryRange, Quote, QuotesStatus, Trend } from './quotes.models';
+import {
+  AppPreferences, CatalogItem, Category, HISTORY_RANGES, HistoryPoint, HistoryRange, Quote, QuotesStatus, Trend, categoryOf
+} from './quotes.models';
 
 export const parseAmbitoNumber = (raw: unknown): number | null => {
   if (raw === null || raw === undefined || raw === '') {
@@ -18,7 +20,21 @@ export const parseAmbitoNumber = (raw: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+/** Accepts the shape normalized by the main process as well as the raw Ámbito payload. */
 export const normalizeQuote = (name: string, raw: any): Quote => {
+  if (typeof raw?.value === 'number' && (raw.currency === 'ARS' || raw.currency === 'USD')) {
+    return {
+      name,
+      value: raw.value,
+      buy: raw.buy ?? null,
+      sell: raw.sell ?? null,
+      variation: raw.variation ?? 0,
+      trend: raw.trend ?? 'equal',
+      date: raw.date ?? '',
+      hasSpread: !!raw.hasSpread,
+      currency: raw.currency
+    };
+  }
   const buy = parseAmbitoNumber(raw?.compra);
   const sell = parseAmbitoNumber(raw?.venta);
   const value = parseAmbitoNumber(raw?.valor) ?? buy ?? sell ?? 0;
@@ -28,7 +44,7 @@ export const normalizeQuote = (name: string, raw: any): Quote => {
     ? rawTrend
     : variation > 0 ? 'up' : variation < 0 ? 'down' : 'equal';
   const hasSpread = raw?.valor === undefined && buy !== null && sell !== null && buy !== sell;
-  return { name, value, buy, sell, variation, trend, date: raw?.fecha ?? '', hasSpread };
+  return { name, value, buy, sell, variation, trend, date: raw?.fecha ?? '', hasSpread, currency: 'ARS' };
 };
 
 const toIsoDate = (date: Date): string => {
@@ -93,6 +109,22 @@ export class QuotesService {
   loadPreferences(): void {
     if (this.electronService.isElectron) {
       this.electronService.ipcRenderer.send('load-preferences', null);
+    }
+  }
+
+  categoryOf(name: string): Category {
+    return categoryOf(this.preferences$.value?.quotations.find(q => q.name === name));
+  }
+
+  async getCatalog(category: Category): Promise<CatalogItem[]> {
+    if (!this.electronService.isElectron) {
+      return [];
+    }
+    try {
+      const items = await this.electronService.ipcRenderer.invoke('get-catalog', category);
+      return Array.isArray(items) ? items : [];
+    } catch {
+      return [];
     }
   }
 

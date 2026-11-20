@@ -16,61 +16,124 @@
   </ng-container>
 
   <form *ngIf="!loading" class="content" (ngSubmit)="save()">
-    <section class="section">
-      <label class="section-label" for="tray-currency">{{ 'PREFERENCES.TRAY_CURRENCY' | translate }}</label>
-      <span class="section-hint">{{ 'PREFERENCES.TRAY_CURRENCY_HINT' | translate }}</span>
-      <div class="select-wrap">
-        <select id="tray-currency" name="defaultCurrency" class="select" [(ngModel)]="defaultCurrency">
-          <option *ngFor="let cur of currencies" [value]="cur">{{ cur }}</option>
-        </select>
-        <i class="bi bi-chevron-down"></i>
-      </div>
-    </section>
+    <div class="scroll">
+      <section class="section">
+        <label class="section-label" for="tray-currency">{{ 'PREFERENCES.TRAY_CURRENCY' | translate }}</label>
+        <span class="section-hint">{{ 'PREFERENCES.TRAY_CURRENCY_HINT' | translate }}</span>
+        <div class="select-wrap">
+          <select id="tray-currency" name="defaultCurrency" class="select" [(ngModel)]="defaultCurrency">
+            <optgroup *ngFor="let group of groups" [label]="group.label | translate">
+              <option *ngFor="let cur of group.names" [value]="cur">{{ cur }}</option>
+            </optgroup>
+          </select>
+          <i class="bi bi-chevron-down"></i>
+        </div>
+      </section>
 
-    <section class="section">
-      <span class="section-label" id="theme-label">{{ 'PREFERENCES.THEME' | translate }}</span>
-      <span class="section-hint">{{ 'PREFERENCES.THEME_HINT' | translate }}</span>
-      <div class="theme-toggle" role="radiogroup" aria-labelledby="theme-label">
-        <button *ngFor="let option of themeOptions"
-                type="button"
-                role="radio"
-                class="theme-option"
-                [class.active]="theme === option.id"
-                [attr.aria-checked]="theme === option.id"
-                (click)="selectTheme(option.id)">
-          <i class="bi" [ngClass]="option.icon"></i>{{ option.label | translate }}
-        </button>
-      </div>
-    </section>
+      <section class="section">
+        <span class="section-label" id="theme-label">{{ 'PREFERENCES.THEME' | translate }}</span>
+        <span class="section-hint">{{ 'PREFERENCES.THEME_HINT' | translate }}</span>
+        <div class="theme-toggle" role="radiogroup" aria-labelledby="theme-label">
+          <button *ngFor="let option of themeOptions"
+                  type="button"
+                  role="radio"
+                  class="theme-option"
+                  [class.active]="theme === option.id"
+                  [attr.aria-checked]="theme === option.id"
+                  (click)="selectTheme(option.id)">
+            <i class="bi" [ngClass]="option.icon"></i>{{ option.label | translate }}
+          </button>
+        </div>
+      </section>
 
-    <section class="section">
-      <div class="section-header">
+      <section class="section">
         <span class="section-label" id="shown-label">{{ 'PREFERENCES.SHOWN' | translate }}</span>
-        <span class="counter tabular" [class.full]="showCurrencies.length >= max" [@shake]="shakeCount">
-          {{ showCurrencies.length }}/{{ max }}
-        </span>
-      </div>
-      <span class="section-hint">{{ 'PREFERENCES.SHOWN_HINT' | translate: { max: max } }}</span>
+        <span class="section-hint">{{ 'PREFERENCES.SHOWN_HINT' | translate: { max: max } }}</span>
 
-      <div class="chips" role="group" aria-labelledby="shown-label">
-        <ng-container *ngFor="let c of currencies">
-          <input type="checkbox"
-                 class="chip-input"
-                 [id]="'currency-' + c"
-                 [name]="'currency-' + c"
-                 [checked]="isSelectedCurrency(c)"
-                 (change)="toggleCurrency(c); $any($event.target).checked = isSelectedCurrency(c)">
-          <label class="chip" [for]="'currency-' + c">
-            <i class="bi" [ngClass]="isSelectedCurrency(c) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-            {{ c }}
-          </label>
-        </ng-container>
-      </div>
+        <div *ngFor="let group of groups; trackBy: trackById" class="group" role="group" [attr.aria-label]="group.label | translate">
+          <div class="group-header">
+            <span class="group-label"><i class="bi" [ngClass]="group.icon"></i>{{ group.label | translate }}</span>
+            <span class="counter tabular" [class.full]="group.shown >= max"
+                  [@shake]="shakeCategory === group.id ? shakeCount : 0">
+              {{ group.shown }}/{{ max }}
+            </span>
+          </div>
+          <div class="chips">
+            <span *ngFor="let c of group.names" class="chip-wrap" [class.removable]="isRemovable(c)">
+              <input type="checkbox"
+                     class="chip-input"
+                     [id]="'currency-' + c"
+                     [name]="'currency-' + c"
+                     [checked]="isSelectedCurrency(c)"
+                     (change)="toggleCurrency(c); $any($event.target).checked = isSelectedCurrency(c)">
+              <label class="chip" [class.ticker]="isRemovable(c)" [for]="'currency-' + c">
+                <i class="bi" [ngClass]="isSelectedCurrency(c) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                {{ c }}
+              </label>
+              <button *ngIf="isRemovable(c)" type="button" class="chip-remove"
+                      [attr.title]="'PREFERENCES.REMOVE' | translate" [attr.aria-label]="('PREFERENCES.REMOVE' | translate) + ' ' + c"
+                      (click)="removeInstrument(c)">
+                <i class="bi bi-x"></i>
+              </button>
+            </span>
+          </div>
+        </div>
 
-      <div *ngIf="maxReachedVisible" class="notice" role="status" @fade>
-        <i class="bi bi-info-circle"></i>{{ 'PREFERENCES.MAX_REACHED' | translate: { max: max } }}
-      </div>
-    </section>
+        <div *ngIf="maxReachedVisible" class="notice" role="status" @fade>
+          <i class="bi bi-info-circle"></i>{{ 'PREFERENCES.MAX_REACHED' | translate: { max: max } }}
+        </div>
+      </section>
+
+      <section class="section">
+        <span class="section-label" id="add-label">{{ 'PREFERENCES.ADD' | translate }}</span>
+        <span class="section-hint">{{ 'PREFERENCES.ADD_HINT' | translate }}</span>
+
+        <div class="theme-toggle" role="tablist" aria-labelledby="add-label">
+          <button *ngFor="let category of marketCategories"
+                  type="button"
+                  role="tab"
+                  class="theme-option"
+                  [class.active]="searchCategory === category.id"
+                  [attr.aria-selected]="searchCategory === category.id"
+                  (click)="selectSearchCategory(category.id)">
+            <i class="bi" [ngClass]="category.icon"></i>{{ category.label | translate }}
+          </button>
+        </div>
+
+        <div class="search">
+          <i class="bi bi-search"></i>
+          <input type="search"
+                 class="search-input"
+                 name="query"
+                 autocomplete="off"
+                 spellcheck="false"
+                 [placeholder]="'PREFERENCES.SEARCH_PLACEHOLDER' | translate"
+                 [(ngModel)]="query">
+        </div>
+
+        <div class="results" role="list">
+          <ng-container *ngIf="catalogLoading">
+            <div *ngFor="let slot of [0, 1, 2]" class="skeleton result-skeleton"></div>
+          </ng-container>
+          <p *ngIf="!catalogLoading && results.length === 0" class="results-empty">
+            {{ (query ? 'PREFERENCES.NO_RESULTS' : 'PREFERENCES.CATALOG_EMPTY') | translate }}
+          </p>
+          <button *ngFor="let item of catalogLoading ? [] : results; trackBy: trackByName"
+                  type="button"
+                  role="listitem"
+                  class="result"
+                  [attr.title]="'PREFERENCES.ADD_ITEM' | translate: { name: item.name }"
+                  (click)="addInstrument(item)">
+            <span class="result-name">{{ item.name }}</span>
+            <span class="result-price tabular">{{ priceLabel(item) }}</span>
+            <span class="result-variation tabular" [class.up]="item.variation > 0" [class.down]="item.variation < 0">
+              {{ item.variation > 0 ? '+' : '' }}{{ item.variation | number:'1.2-2' }}%
+            </span>
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+      </section>
+    </div>
 
     <footer class="actions">
       <button type="button" class="btn-ui" (click)="cancel()">{{ 'PREFERENCES.CANCEL' | translate }}</button>

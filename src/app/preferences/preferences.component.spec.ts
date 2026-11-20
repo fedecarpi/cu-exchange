@@ -22,7 +22,12 @@ describe('PreferencesComponent', () => {
     fixture.detectChanges();
 
     TestBed.inject(QuotesService).preferences$.next({
-      quotations: ['oficial', 'ccl', 'mep', 'cripto'].map(name => ({ name, fetchURL: '' })),
+      quotations: [
+        ...['oficial', 'ccl', 'mep', 'cripto', 'mayorista', 'nacion'].map(name => ({
+          name, category: 'dolar' as const, source: 'ambito' as const, fetchURL: ''
+        })),
+        { name: 'GGAL', category: 'acciones', source: 'data912', symbol: 'GGAL' }
+      ],
       defaultCurrency: 'ccl',
       showCurrencies: ['oficial', 'ccl']
     });
@@ -45,15 +50,33 @@ describe('PreferencesComponent', () => {
     expect(component.theme).toBe('dark');
   });
 
-  it('should toggle currencies up to the maximum', () => {
-    component.toggleCurrency('mep');
-    expect(component.showCurrencies).toEqual(['oficial', 'ccl', 'mep']);
+  it('should toggle currencies up to the maximum per category', () => {
+    ['mep', 'cripto', 'mayorista'].forEach(c => component.toggleCurrency(c));
+    expect(component.showCurrencies).toEqual(['oficial', 'ccl', 'mep', 'cripto', 'mayorista']);
 
-    component.toggleCurrency('cripto');
-    expect(component.showCurrencies.length).toBe(3);
+    component.toggleCurrency('nacion');
+    expect(component.showCurrencies.length).toBe(5);
     expect(component.maxReachedVisible).toBeTrue();
 
+    component.toggleCurrency('GGAL');
+    expect(component.showCurrencies).toContain('GGAL');
+
     component.toggleCurrency('oficial');
-    expect(component.showCurrencies).toEqual(['ccl', 'mep']);
+    expect(component.showCurrencies).not.toContain('oficial');
+  });
+
+  it('should add and remove market instruments', () => {
+    component.selectSearchCategory('cedears');
+    component.addInstrument({ name: 'AAPL', symbol: 'AAPL', price: 30880, variation: 2.1, currency: 'ARS' });
+    expect(component.quotations.find(q => q.name === 'AAPL')).toEqual(
+      { name: 'AAPL', category: 'cedears', source: 'data912', symbol: 'AAPL' }
+    );
+    expect(component.showCurrencies).toContain('AAPL');
+    expect(component.groups.map(g => g.id)).toEqual(['dolar', 'acciones', 'cedears']);
+
+    component.removeInstrument('AAPL');
+    expect(component.quotations.some(q => q.name === 'AAPL')).toBeFalse();
+    expect(component.showCurrencies).not.toContain('AAPL');
+    expect(component.isRemovable('ccl')).toBeFalse();
   });
 });
