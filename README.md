@@ -47,11 +47,14 @@ Data sources (all free, no API key):
 
 If one provider fails, the others keep updating; the popup only shows an error when every provider fails.
 
-__Warning__
-Known issues on Linux env:
-  - Tray window opens in wrong position.
-  - Tray component does not support text information (just tray icon).
-  - Preferences are not being saved.   
+### Linux notes
+
+- Left click on the tray icon toggles the popup, which opens next to the icon (top or bottom panel). Right click opens a menu with the selected quote and Show quotes / Refresh / Preferences / Quit.
+- Linux trays can't show text next to the icon, so the selected quote is shown in the tooltip and as the menu header.
+- Installed packages save preferences to `~/.config/cu-exchange/cu-exchange-properties.json` (macOS: `~/Library/Application Support/cu-exchange/`), seeded from the bundled defaults on first run.
+- Validated on XFCE with both StatusNotifierItem and legacy XEmbed trays. GNOME needs the AppIndicator extension to show tray icons at all.
+
+To reproduce, `npm run linux:tray up [sni|xembed] [top|bottom]` starts a Docker container (Xvfb + XFCE panel) running the app, with Chrome DevTools Protocol on `localhost:9222`. Other subcommands: `click-tray [1|3]`, `click X Y`, `shot`, `windows`, `logs`, `deb` (build and install the `.deb`), `sh` and `down`.
 
 __Warning__ Not tested on Win env yet!
 
@@ -135,6 +138,7 @@ Maybe you only want to execute the application in the browser with hot reload? J
 | `npm run electron:local` | Builds your application and start electron locally                                                    |
 | `npm run electron:build` | Builds your application and creates an app consumable based on your operating system                  |
 | `npm run release --release=X.Y.Z` | Triggers GitHub Actions to build Linux/macOS/Windows and publish a GitHub Release           |
+| `npm run linux:tray up`  | Runs the app in a Linux tray test container (see Linux notes)                                         |
 
 **Your application is optimised. Only /dist folder and NodeJS dependencies are included in the final bundle.**
 
