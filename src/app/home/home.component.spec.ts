@@ -42,12 +42,42 @@ describe('HomeComponent', () => {
       showCurrencies: ['oficial', 'ccl']
     });
     quotesService.quotes$.next({
-      oficial: { name: 'oficial', value: 1000, buy: 1000, sell: 1050, variation: 0.5, trend: 'up', date: '', hasSpread: true },
-      ccl: { name: 'ccl', value: 1200, buy: 1200, sell: 1200, variation: -0.4, trend: 'down', date: '', hasSpread: false }
+      oficial: {
+        name: 'oficial', value: 1000, buy: 1000, sell: 1050, variation: 0.5, trend: 'up', date: '', hasSpread: true, currency: 'ARS'
+      },
+      ccl: { name: 'ccl', value: 1200, buy: 1200, sell: 1200, variation: -0.4, trend: 'down', date: '', hasSpread: false, currency: 'ARS' }
     });
     fixture.detectChanges();
 
     const compiled: HTMLElement = fixture.nativeElement;
     expect(compiled.querySelectorAll('app-currency-card').length).toBe(2);
+    expect(compiled.querySelector('.tabs')).toBeNull();
+  });
+
+  it('should group quotes in category tabs', () => {
+    localStorage.removeItem('home.activeCategory');
+    quotesService.preferences$.next({
+      quotations: [
+        { name: 'ccl', category: 'dolar', source: 'ambito', fetchURL: '' },
+        { name: 'btc', category: 'cripto', source: 'binance', symbol: 'BTCUSDT' }
+      ],
+      defaultCurrency: 'ccl',
+      showCurrencies: ['ccl', 'btc']
+    });
+    quotesService.quotes$.next({
+      ccl: { name: 'ccl', value: 1200, buy: 1200, sell: 1200, variation: -0.4, trend: 'down', date: '', hasSpread: false, currency: 'ARS' },
+      btc: { name: 'btc', value: 58000, buy: null, sell: null, variation: 1.2, trend: 'up', date: '', hasSpread: false, currency: 'USD' }
+    });
+    fixture.detectChanges();
+
+    const compiled: HTMLElement = fixture.nativeElement;
+    expect(compiled.querySelectorAll('.tab').length).toBe(2);
+    expect(component.quotes.map(q => q.name)).toEqual(['ccl']);
+
+    component.selectTab('cripto');
+    fixture.detectChanges();
+    expect(component.quotes.map(q => q.name)).toEqual(['btc']);
+    expect(compiled.querySelector('.currency')?.textContent).toBe('US$');
+    localStorage.removeItem('home.activeCategory');
   });
 });

@@ -13,7 +13,17 @@ import {
 } from 'lightweight-charts';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ElectronService, HISTORY_RANGES, HistoryPoint, HistoryRange, Quote, QuotesService } from '../core/services';
+import {
+  CATEGORIES, Category, ElectronService, HISTORY_RANGES, HistoryPoint, HistoryRange, Quote, QuotesService, categoryOf, currencySymbol,
+  formatPrice
+} from '../core/services';
+
+interface CurrencyGroup {
+  id: Category;
+  label: string;
+  icon: string;
+  names: string[];
+}
 
 interface HistoryStats {
   first: number;
@@ -33,7 +43,6 @@ interface TooltipState {
   value: number;
 }
 
-const priceFormatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dateFormatter = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 
 const timeToDate = (time: Time): Date => {
@@ -68,7 +77,8 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly isMac = !!window.process && window.process.platform === 'darwin';
 
   currency = '';
-  currencies: string[] = [];
+  groups: CurrencyGroup[] = [];
+  viewCategory: Category = 'dolar';
   range: HistoryRange = '1M';
   points: HistoryPoint[] = [];
   stats: HistoryStats | null = null;
@@ -92,6 +102,14 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
     this.onColorSchemeChange = () => this.applyTheme();
   }
 
+  get visibleCurrencies(): string[] {
+    return this.groups.find(g => g.id === this.viewCategory)?.names ?? [];
+  }
+
+  get currencySymbol(): string {
+    return currencySymbol(this.quote?.currency);
+  }
+
   get rangeIndex(): number {
     return Math.max(0, this.ranges.findIndex(r => r.id === this.range));
   }
@@ -112,7 +130,15 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.quotesService.preferences$.pipe(takeUntil(this.destroy$)).subscribe(preferences => {
       if (preferences) {
-        this.currencies = preferences.quotations.map(q => q.name);
+        this.groups = CATEGORIES
+          .map(c => ({
+            id: c.id,
+            label: c.label,
+            icon: c.icon,
+            names: preferences.quotations.filter(q => categoryOf(q) === c.id).map(q => q.name)
+          }))
+          .filter(g => g.names.length > 0);
+        this.viewCategory = this.categoryOf(this.currency);
       }
     });
 
@@ -151,8 +177,20 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.currency = name;
+    this.viewCategory = this.categoryOf(name);
     this.quote = this.quotesService.quotes$.value[name] ?? null;
     this.loadHistory();
+  }
+
+  selectCategory(category: Category): void {
+    if (category === this.viewCategory) {
+      return;
+    }
+    this.viewCategory = category;
+    const first = this.groups.find(g => g.id === category)?.names[0];
+    if (first) {
+      this.selectCurrency(first);
+    }
   }
 
   selectRange(range: HistoryRange): void {
@@ -167,7 +205,16 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   formatPrice(value: number): string {
-    return priceFormatter.format(value);
+    return formatPrice(value);
+  }
+
+  private categoryOf(name: string): Category {
+    for (const group of this.groups) {
+      if (group.names.includes(name)) {
+        return group.id;
+      }
+    }
+    return this.viewCategory;
   }
 
   private async loadHistory(): Promise<void> {
@@ -223,7 +270,7 @@ export class HistoryComponent implements OnInit, AfterViewInit, OnDestroy {
       timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true },
       localization: {
         locale: 'es-AR',
-        priceFormatter: (price: number) => priceFormatter.format(price)
+        priceFormatter: (price: number) => formatPrice(price)
       }
     });
     this.series = this.chart.addAreaSeries({

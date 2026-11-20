@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, NgZone, OnChanges, OnDestroy } from '@angular/core';
+import { formatPrice } from '../../../core/services/quotes/quotes.models';
 
-const formatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 @Directive({
@@ -54,6 +54,6 @@ export class AnimatedNumberDirective implements OnChanges, OnDestroy {
   }
 
   private render(value: number | null): void {
-    this.el.nativeElement.textContent = value === null ? '—' : formatter.format(value);
+    this.el.nativeElement.textContent = value === null ? '—' : formatPrice(value);
   }
 }

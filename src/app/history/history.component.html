@@ -1,8 +1,20 @@
 <div class="window" [class.mac]="isMac">
   <header class="titlebar">
     <span class="title">{{ 'HISTORY.TITLE' | translate }}</span>
+    <nav *ngIf="groups.length > 1" class="chips" role="tablist">
+      <button *ngFor="let group of groups"
+              type="button"
+              role="tab"
+              class="chip category"
+              [class.active]="group.id === viewCategory"
+              [attr.aria-selected]="group.id === viewCategory"
+              (click)="selectCategory(group.id)">
+        <i class="bi" [ngClass]="group.icon"></i>{{ group.label | translate }}
+      </button>
+      <span class="chips-break"></span>
+    </nav>
     <nav class="chips" role="tablist">
-      <button *ngFor="let name of currencies"
+      <button *ngFor="let name of visibleCurrencies"
               type="button"
               role="tab"
               class="chip"
@@ -19,7 +31,7 @@
       <span class="label">{{ currency }} · {{ 'HISTORY.CURRENT' | translate }}</span>
       <div class="value-row">
         <span class="value tabular">
-          <span class="currency">$</span><span [appAnimatedNumber]="quote?.value ?? stats?.last ?? null"></span>
+          <span class="currency">{{ currencySymbol }}</span><span [appAnimatedNumber]="quote?.value ?? stats?.last ?? null"></span>
         </span>
         <span *ngIf="quote" class="pill tabular" [class.up]="quote.trend === 'up'" [class.down]="quote.trend === 'down'">
           <i class="bi" [ngClass]="quote.trend === 'up' ? 'bi-caret-up-fill' : quote.trend === 'down' ? 'bi-caret-down-fill' : 'bi-dash'"></i>
@@ -74,7 +86,7 @@
          [style.left.px]="tooltip.x"
          [style.top.px]="tooltip.y">
       <span class="tooltip-date">{{ tooltip.date }}</span>
-      <span class="tooltip-value">$ {{ formatPrice(tooltip.value) }}</span>
+      <span class="tooltip-value">{{ currencySymbol }} {{ formatPrice(tooltip.value) }}</span>
     </div>
 
     <div *ngIf="loading && points.length === 0" class="overlay" @fade>

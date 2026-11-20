@@ -5,7 +5,7 @@ import { menubar } from 'menubar';
 import * as path from 'path';
 import { log } from 'electron-log';
 const os = require('os');
-import axios from 'axios';
+import { CATEGORY_SOURCES, NormalizedQuote, PROVIDERS, QuotationConfig, Source, normalizeQuotation } from './providers';
 
 const platforms = {
   WINDOWS: 'WINDOWS',
@@ -36,19 +36,13 @@ const args = process.argv.slice(1),
 const POPUP_WIDTH = 240;
 const POPUP_MIN_HEIGHT = 120;
 const HISTORY_CACHE_TTL_MS = 60 * 60 * 1000;
-const AMBITO_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-  'Referer': 'https://www.ambito.com/',
-  'Origin': 'https://www.ambito.com',
-};
+const trayNumberFormatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 let mb = null;
 let tray = null
 let preferenceWin: BrowserWindow = null;
 let historyWin: BrowserWindow = null;
 let preferencesFilePath = null;
-let quotations = [];
-let currencies = [];
 const historyCache = new Map<string, { timestamp: number; points: { date: string; value: number }[] }>();
 
 function themeBackgroundColor() {
@@ -122,7 +116,6 @@ try {
   }
 
   const gotTheLock = app.requestSingleInstanceLock();
-  currencies = getQuotationsNames();
   if (!gotTheLock) {
     log('Instance app does not get the lock ... closing it!');
     app.quit()
@@ -176,6 +169,8 @@ try {
 function getJsonProperties() {
   let rawdata = fs.readFileSync(preferencesFilePath, 'utf8');
   let jsonPref = JSON.parse(rawdata);
+  const quotations = Array.isArray(jsonPref.quotations) ? jsonPref.quotations : [];
+  jsonPref.quotations = quotations.map(normalizeQuotation).filter(q => q !== null);
   return jsonPref;
 }
 
@@ -188,141 +183,62 @@ function getSelectedCurrency() {
   }
 }
 
-function getQuotations() {
-  if (!quotations || quotations.length == 0) {
-    let json = getJsonProperties();
-    quotations = json.quotations;
-  }
-  return quotations;
+function getQuotations(): QuotationConfig[] {
+  return getJsonProperties().quotations;
 }
 
-function getQuotationsNames() {
-  if (!quotations || quotations.length == 0) {
-    let json = getJsonProperties();
-    quotations = json.quotations;
-  }
-  let names = [];
-  quotations.forEach(q => {
-    names.push(q.name);
-  });
-  return names;
-}
-
-function calculateQName(axiosResp) {
-  const qs = getQuotations();
-  for (let index = 0; index < qs.length; index++) {
-    const element = qs[index];
-    if (element['fetchURL'] == axiosResp['config']['url'] ) {
-      return element['name'];
-    }
-  }
-}
-
-function getDataFromRequests(axiosData) { 
-  let resp = {};
-  axiosData.forEach(axiosResp => {
-    const qName = calculateQName(axiosResp);
-    resp[qName] = axiosResp['data'];
-  });
-  return resp;
-}
-
-function parseAmbitoNumber(raw) {
-  if (raw === null || raw === undefined || raw === '') {
-    return null;
-  }
-  if (typeof raw === 'number') {
-    return raw;
-  }
-  let text = String(raw).replace('%', '').trim();
-  if (text.includes(',')) {
-    text = text.replace(/\./g, '').replace(',', '.');
-  }
-  const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function updateTray(jsonObj) {
+function updateTray(quotes: Record<string, NormalizedQuote>) {
   const selectedCurrency = getSelectedCurrency();
-  const quote = jsonObj[selectedCurrency];
+  const quote = quotes[selectedCurrency];
   if (!quote) {
     return;
   }
-  const value = quote['valor'] || quote['compra'];
-  tray.setToolTip(selectedCurrency + ': $' + value + ' (' + quote['variacion'] + ')');
-  if (quote['class-variacion'] == 'up' || quote['class-variacion'] == 'equal') {
-    tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + green(value + '↗'));
+  const quotation = getQuotations().find(q => q.name == selectedCurrency);
+  const label = !quotation || quotation.category == 'dolar' ? selectedCurrency.slice(0, 3) : selectedCurrency;
+  const prefix = quote.currency == 'USD' ? 'US$' : '$';
+  const value = trayNumberFormatter.format(quote.value);
+  const variation = trayNumberFormatter.format(quote.variation) + '%';
+  tray.setToolTip(selectedCurrency + ': ' + prefix + value + ' (' + variation + ')');
+  if (quote.trend == 'up' || quote.trend == 'equal') {
+    tray.setTitle(label + ': ' + green(value + '↗'));
   } else {
-    tray.setTitle(selectedCurrency.slice(0, 3) + ': ' + red(value + '↘'));
+    tray.setTitle(label + ': ' + red(value + '↘'));
   }
+}
+
+async function fetchAllQuotes(): Promise<Record<string, NormalizedQuote>> {
+  const bySource = new Map<Source, QuotationConfig[]>();
+  getQuotations().forEach(q => bySource.set(q.source, [...(bySource.get(q.source) || []), q]));
+  const results = await Promise.all(Array.from(bySource.entries()).map(([source, items]) =>
+    PROVIDERS[source].fetchQuotes(items)
+      .then(quotes => ({ ok: true, quotes }))
+      .catch(err => {
+        log('Error fetching ' + source + ' quotes: ' + err);
+        return { ok: false, quotes: {} as Record<string, NormalizedQuote> };
+      })
+  ));
+  if (results.length > 0 && results.every(r => !r.ok)) {
+    throw new Error('No provider returned quotes');
+  }
+  return results.reduce((all, r) => ({ ...all, ...r.quotes }), {} as Record<string, NormalizedQuote>);
 }
 
 function getCurrencyValues(event) {
   const target = event ? event.sender : (mb && mb.window ? mb.window.webContents : null);
-  try {
-    const quotations = getQuotations();
-    const requests = [];
-    quotations.forEach(q => {
-      requests.push(axios.get(q.fetchURL, { timeout: 15000 }));
-    });
-    Promise.all(requests).then(function(values) {
-      if (values) {
-        const jsonObj = getDataFromRequests(values);
-        if (jsonObj) {
-          updateTray(jsonObj);
-          if (target && !target.isDestroyed()) {
-            if (!event) {
-              target.send('load-json-properties', getJsonProperties());
-            }
-            target.send('update-currency-values-ui', jsonObj);
-          }
-        }
+  fetchAllQuotes().then(quotes => {
+    updateTray(quotes);
+    if (target && !target.isDestroyed()) {
+      if (!event) {
+        target.send('load-json-properties', getJsonProperties());
       }
-    }).catch(err => {
-      log('Error fetching currency values: ' + err);
-      if (target && !target.isDestroyed()) {
-        target.send('currency-values-error', String(err));
-      }
-    });
-  } catch (err) {
-    log(err);
+      target.send('update-currency-values-ui', quotes);
+    }
+  }).catch(err => {
+    log('Error fetching currency values: ' + err);
     if (target && !target.isDestroyed()) {
       target.send('currency-values-error', String(err));
     }
-  }
-}
-
-function historyURLFor(quotation, from: string, to: string) {
-  if (quotation.historyURL) {
-    return quotation.historyURL.replace('{from}', from).replace('{to}', to);
-  }
-  if (/\/variacion\/?$/.test(quotation.fetchURL)) {
-    return quotation.fetchURL.replace(/\/variacion\/?$/, `/historico-general/${from}/${to}`);
-  }
-  return null;
-}
-
-// Ambito returns [["Fecha","Compra","Venta"], ["dd/mm/yyyy","1.234,56",...], ...] with duplicates and no stable order.
-function parseHistory(rows) {
-  if (!Array.isArray(rows) || rows.length < 2 || !Array.isArray(rows[0])) {
-    return [];
-  }
-  const header = rows[0].map(h => String(h).toLowerCase());
-  let column = header.indexOf('compra');
-  if (column < 0) {
-    column = header.length - 1;
-  }
-  const byDate = new Map<string, number>();
-  rows.slice(1).forEach(row => {
-    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(row[0]));
-    const value = parseAmbitoNumber(row[column]);
-    if (match && value !== null) {
-      byDate.set(`${match[3]}-${match[2]}-${match[1]}`, value);
-    }
   });
-  return Array.from(byDate.entries())
-    .map(([date, value]) => ({ date, value }))
-    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 ipcMain.handle('get-currency-history', async (event, { name, from, to }) => {
@@ -330,21 +246,30 @@ ipcMain.handle('get-currency-history', async (event, { name, from, to }) => {
   if (!quotation) {
     return [];
   }
-  const url = historyURLFor(quotation, from, to);
-  if (!url) {
-    return [];
-  }
-  const cached = historyCache.get(url);
+  const key = [quotation.source, quotation.category, quotation.symbol || quotation.fetchURL || name, from, to].join('|');
+  const cached = historyCache.get(key);
   if (cached && Date.now() - cached.timestamp < HISTORY_CACHE_TTL_MS) {
     return cached.points;
   }
   try {
-    const resp = await axios.get(url, { headers: AMBITO_HEADERS, timeout: 15000 });
-    const points = parseHistory(resp.data);
-    historyCache.set(url, { timestamp: Date.now(), points });
+    const points = await PROVIDERS[quotation.source].fetchHistory(quotation, from, to);
+    historyCache.set(key, { timestamp: Date.now(), points });
     return points;
   } catch (err) {
     log('Error fetching history for ' + name + ': ' + err);
+    return [];
+  }
+});
+
+ipcMain.handle('get-catalog', async (event, category) => {
+  const provider = PROVIDERS[CATEGORY_SOURCES[category]];
+  if (!provider || !provider.fetchCatalog) {
+    return [];
+  }
+  try {
+    return await provider.fetchCatalog(category);
+  } catch (err) {
+    log('Error fetching ' + category + ' catalog: ' + err);
     return [];
   }
 });
@@ -385,7 +310,7 @@ function secondaryWindowOptions(title: string, width: number, height: number) {
 
 function createPreferenceWindow() {
   preferenceWin = new BrowserWindow({
-    ...secondaryWindowOptions('Preferences', 440, 640),
+    ...secondaryWindowOptions('Preferences', 460, 780),
     alwaysOnTop: true,
     resizable: (serve)?true:false,
   });
@@ -456,11 +381,38 @@ ipcMain.on('close-preference-win', (event, value) => {
   }
 });
 
+// Ámbito dollars are fixed; only market instruments can be added or removed from Preferences.
+function mergeQuotations(current: QuotationConfig[], requested: any[]): QuotationConfig[] {
+  const merged = current.filter(q => q.source == 'ambito');
+  const names = new Set(merged.map(q => q.name));
+  requested.forEach(raw => {
+    if (!raw || raw.category == 'dolar' || !(raw.category in CATEGORY_SOURCES)) {
+      return;
+    }
+    const quotation = normalizeQuotation({
+      name: String(raw.name),
+      category: raw.category,
+      source: CATEGORY_SOURCES[raw.category],
+      symbol: String(raw.symbol || raw.name).toUpperCase()
+    });
+    if (quotation && !names.has(quotation.name)) {
+      names.add(quotation.name);
+      merged.push(quotation);
+    }
+  });
+  return merged;
+}
+
 ipcMain.on('save-preferences', (event, newPreferences) => {
   const jsonProperties = getJsonProperties();
   if (newPreferences) {
-    jsonProperties.defaultCurrency = newPreferences.defaultCurrency;
-    jsonProperties.showCurrencies = newPreferences.showCurrencies;
+    if (Array.isArray(newPreferences.quotations)) {
+      jsonProperties.quotations = mergeQuotations(jsonProperties.quotations, newPreferences.quotations);
+    }
+    const names = new Set(jsonProperties.quotations.map(q => q.name));
+    jsonProperties.defaultCurrency = names.has(newPreferences.defaultCurrency)
+      ? newPreferences.defaultCurrency : jsonProperties.quotations[0]?.name;
+    jsonProperties.showCurrencies = (newPreferences.showCurrencies || []).filter(name => names.has(name));
     jsonProperties.theme = newPreferences.theme === 'light' || newPreferences.theme === 'dark'
       ? newPreferences.theme : 'system';
     try {
